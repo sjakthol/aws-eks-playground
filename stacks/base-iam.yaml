@@ -1,0 +1,118 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: EKS Playground - IAM Roles for EKS control and data planes
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+  EKSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+      RoleName: !Sub ${AWS::StackName}-eks-service-role
+
+  FargatePodExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks-fargate-pods.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
+      RoleName: !Sub ${AWS::StackName}-fargate-pod-execution-role
+
+  WorkerNodeInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
+  WorkerNodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      RoleName: !Sub ${AWS::StackName}-worker-role
+
+  ## TODO: Figure out how to get Spark work with IAM Roles for Service Accounts
+  SparkDataAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SparkDataAccessPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AccessToNotebookBucket
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks'
+              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks/*'
+          - Sid: AccessToSampleDataBuckets
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:GetObject
+            Resource:
+              - 'arn:aws:s3:::amazon-reviews-pds'
+              - 'arn:aws:s3:::amazon-reviews-pds/*'
+              - 'arn:aws:s3:::ew1-infra-trail'
+              - 'arn:aws:s3:::ew1-infra-trail/*'
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
+Outputs:
+  EKSServiceRoleArn:
+    Value: !GetAtt EKSServiceRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-EKSServiceRoleArn
+
+  FargatePodExecutionRoleArn:
+    Value: !GetAtt FargatePodExecutionRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-FargatePodExecutionRoleArn
+
+  WorkerNodeInstanceRoleArn:
+    Value: !GetAtt WorkerNodeInstanceRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerNodeInstanceRoleArn
+
+  WorkerNodeInstanceProfileArn:
+    Value: !GetAtt WorkerNodeInstanceProfile.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerNodeInstanceProfileArn

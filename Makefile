@@ -33,7 +33,7 @@ delete-oidc-provider:
 		$(AWS_CMD) iam delete-open-id-connect-provider --open-id-connect-provider-arn $$arn; \
 	done
 
-deploy-irsa-roles: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
+deploy-pod-iam: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
 
 PRIVATE_SUBNET_01 = $(eval PRIVATE_SUBNET_01 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet01`].OutputValue' --output text))$(PRIVATE_SUBNET_01)
 PRIVATE_SUBNET_02 = $(eval PRIVATE_SUBNET_02 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet02`].OutputValue' --output text))$(PRIVATE_SUBNET_02)
@@ -60,12 +60,11 @@ deploy-fargate-profile-kube-system:
 	kubectl patch deployment coredns -n kube-system --type json \
 		-p='[{"op": "remove", "path": "/spec/template/metadata/annotations/eks.amazonaws.com~1compute-type"}]'
 
-deploy-simple:
-	# Create ECR repositories for storing container images this guide requires.
-	$(MAKE) deploy-ecr | cfn-monitor
+WORKER_ROLE_ARN ?= $(shell $(AWS_CMD) cloudformation list-exports --query 'Exports[?Name==`$(STACK_PREFIX)-base-iam-WorkerNodeInstanceRoleArn`].Value' --output text)
 
-	# Create a VPC with two public and two private subnets (with NAT) for the EKS control plane and worker nodes.
-	$(MAKE) deploy-vpc | cfn-monitor
+deploy-simple:
+	# Deploy infra resources
+	$(MAKE) -j deploy-base-ecr deploy-base-iam deploy-base-sg | cfn-monitor
 
 	# Create the EKS control plane for the cluster
 	$(MAKE) deploy-eks | cfn-monitor
@@ -74,19 +73,20 @@ deploy-simple:
 	$(AWS_CMD) eks update-kubeconfig --name $(STACK_PREFIX)-eks-cluster
 
 	# Configure Kubernetes to let worker nodes attach to the cluster
-	sed -i "s/000000000000/$(AWS_ACCOUNT_ID)/g" config/aws-auth-cm.yaml
+	sed -i "s|WORKER_ROLE_ARN|$(WORKER_ROLE_ARN)|g" config/aws-auth-cm.yaml
 	kubectl apply -f config/aws-auth-cm.yaml
 
-	# Create common resources for worker nodes (IAM Roles, SGs)
-	$(MAKE) deploy-nodegroup-common | cfn-monitor
+	# Create OIDC Profiler for IAM Roles for Service Accounts
+	$(MAKE) create-oidc-provider
 
-	# Create ASGs for worker nodes
+	# Create roles for IAM Roles for Service Accounts (Pods)
+	$(MAKE) deploy-pod-iam | cfn-monitor
+
+	# Create Data Plane (Worker Nodes)
 	$(MAKE) deploy-nodegroup | cfn-monitor
 
 cleanup-simple:
-	$(MAKE) delete-irsa-roles | cfn-monitor
-	$(MAKE) delete-nodegroup | cfn-monitor
-	$(MAKE) delete-nodegroup-common | cfn-monitor
-	$(MAKE) delete-logging | cfn-monitor
+	$(MAKE) delete-oidc-provider
+	$(MAKE) -j delete-pod-iam delete-nodegroup delete-logging delete-spark | cfn-monitor
 	$(MAKE) delete-eks | cfn-monitor
-	$(MAKE) delete-vpc | cfn-monitor
+	$(MAKE) -j delete-base-sg delete-base-iam delete-base-ecr | cfn-monitor

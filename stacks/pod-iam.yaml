@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EKS Playground - IAM Roles for Pods (IAM Roles Service Accounts)
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+  OIDCProviderId:
+    Description: ID of the OIDC provider created for IRSA.
+    Type: String
+
+Resources:
+  ClusterAutoscalerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
+              }
+            }
+          }]
+        }
+      RoleName: !Sub ${AWS::StackName}-cluster-autoscaler-role
+      Policies:
+      - PolicyName: K8SClusterAutoscalerPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: AllowReadOnlyActions
+              Effect: Allow
+              Action:
+                - autoscaling:DescribeAutoScalingGroups
+                - autoscaling:DescribeAutoScalingInstances
+                - autoscaling:DescribeLaunchConfigurations
+                - autoscaling:DescribeTags
+              Resource: "*"
+            - Sid: AllowASGManagement
+              Effect: Allow
+              Action:
+                - autoscaling:SetDesiredCapacity
+                - autoscaling:TerminateInstanceInAutoScalingGroup
+              Resource:
+                - !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/eks-*
+              Condition:
+                StringEquals:
+                  aws:ResourceTag/eks:cluster-name: !Sub ${StackNamePrefix}-eks-cluster
+
+  IrsaTestRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${OIDCProviderId}:sub": "system:serviceaccount:default:irsa-test"
+              }
+            }
+          }]
+        }
+
+      RoleName: !Sub ${AWS::StackName}-irsa-test
+      Path: /
+      Policies:
+      - PolicyName: TestAccess
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Sid: TestAccess
+            Effect: Allow
+            Action:
+            - eks:ListClusters
+            Resource: '*'
+
+  SparkRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${OIDCProviderId}:sub": "system:serviceaccount:default:spark"
+              }
+            }
+          }]
+        }
+      RoleName: !Sub ${AWS::StackName}-spark-role
+      Policies:
+      - PolicyName: SparkDataAccessPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: AccessToNotebookBucket
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:DeleteObject
+                - s3:GetObject
+                - s3:PutObject
+              Resource:
+                - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks'
+                - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks/*'
+            - Sid: AccessToSampleDataBuckets
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetObject
+              Resource:
+                - 'arn:aws:s3:::amazon-reviews-pds'
+                - 'arn:aws:s3:::amazon-reviews-pds/*'
+                - 'arn:aws:s3:::ew1-infra-trail'
+                - 'arn:aws:s3:::ew1-infra-trail/*'

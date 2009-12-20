@@ -7,6 +7,7 @@ General notes:
 * Search and replace eu-north-1 with the AWS region you want to use
 * Search and replace en1 with the prefix for AWS region you want to use
 * Makefile targets require [cfn-monitor](https://github.com/sjakthol/cfn-monitor) tool (install with `npm i -g cfn-monitor`)
+* Setup requires VPC, subnet and NAT stacks from [sjakthol/aws-account-infra](https://github.com/sjakthol/aws-account-infra).
 
 **Table of Contents**
 1. [Deploy and configure Kubernetes cluster](#deploy-and-configure-kubernetes-cluster)
@@ -152,16 +153,7 @@ kubectl get nodes --watch -o wide
 ## IAM Roles for Service Accounts
 IAM Roles for Service Accounts (IRSA) give pods a dedicated IAM role to operate on AWS APIs. See https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/ for details.
 
-Use the following commands to setup IRSA:
-```bash
-# Create OpenID Connect Provider to the IAM service for the EKS OIDC
-make create-oidc-provider
-
-# Create IRSA capable IAM roles
-make deploy-irsa-roles
-```
-
-To deploy a component that uses a sample role, run the following:
+Makefile creates an OIDC provider and a set of IAM roles that can be assigned to Kubernetes Service Accounts. To deploy a component that uses a sample role, run the following:
 ```bash
 # Create service account that is assigned with the irsa-test role from the irsa-roles stack
 kubectl apply -f components/irsa-test/deployment/serviceaccount.yaml
@@ -170,7 +162,7 @@ kubectl apply -f components/irsa-test/deployment/serviceaccount.yaml
 kubectl apply -f components/irsa-test/deployment/pod.yaml
 
 # Log into the pod to see the role in action
-kubectl exec -ti irsa-test-pod bash
+kubectl exec -ti irsa-test-pod -- bash
 
 # Install AWS CLI to test the role
 pip install awscli
@@ -242,6 +234,9 @@ kubectl logs jupyter
 ```
 
 ## Logging with Fluent Bit
+
+Note: This does not work at the moment.
+
 The `components/logging/` contains a Fluent Bit setup for forwarding logs
 from pods to CloudWatch Logs. The included configuration enriches each log
 line with Kubernetes metadata and outputs the logs in JSON format. Use the
@@ -258,6 +253,8 @@ kubectl apply -f components/logging/deployment/
 You can find pod container logs from CloudWatch Logs.
 
 ## Fargate
+
+Note: This does not work at the moment.
 
 Amazon EKS can execute pods in AWS Fargate. Use the following commands to setup Fargate
 profile(s) for the EKS cluster:
@@ -298,7 +295,7 @@ make delete-spark | cfn-monitor
 make delete-ecr | cfn-monitor
 ```
 
-* Note: You might want to check that no ELBs were left running
+You'll need to empty all S3 buckets and ECR Repositories before they can be deleted. You might also want to check that no ELBs were left running.
 
 ## Credits
 
@@ -309,7 +306,6 @@ The contents of this repository have been scraped together from the following so
 * Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.0.0/aio/deploy/recommended.yaml (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
-* VPC template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)
 
 Other configs based on examples available in Kubernetes Documentation and other random sources in the internet.

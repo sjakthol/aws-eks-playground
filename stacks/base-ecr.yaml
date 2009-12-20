@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: ECR repositories for EKS Playground services
+Description: EKS Playground - ECR repositories for services
 
 Resources:
   HelloWorld:

@@ -3,110 +3,30 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Amazon EKS - Node Group
 
 Parameters:
-
-  NodeImageId:
-    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
-    Default: /aws/service/eks/optimized-ami/1.18/amazon-linux-2/recommended/image_id
-    Description: AWS Systems Manager Parameter Store parameter of the AMI ID for the worker node instances.
-
-  NodeAutoScalingGroupMinSize:
-    Description: Minimum size of Node Group ASG.
-    Type: Number
-    Default: 0
-
-  NodeAutoScalingGroupMaxSize:
-    Description: Maximum size of Node Group ASG. Set to at least 1 greater than NodeAutoScalingGroupDesiredCapacity.
-    Type: Number
-    Default: 4
-
-  NodeAutoScalingGroupADesiredCapacity:
-    Description: Initial desired capacity of Node Group ASG in AZ-A.
-    Type: Number
-    Default: 1
-
-  NodeAutoScalingGroupBDesiredCapacity:
-    Description: Initial desired capacity of Node Group ASG in AZ-B.
-    Type: Number
-    Default: 0
-
   StackNamePrefix:
     Description: A prefix for the stacks in this setup.
     Type: String
 
 Resources:
 
-  NodeLaunchTemplate:
-    Type: "AWS::EC2::LaunchTemplate"
+  NodeGroup:
+    Type: AWS::EKS::Nodegroup
     Properties:
-      LaunchTemplateName: !Sub ${AWS::StackName}-template
-      LaunchTemplateData:
-        IamInstanceProfile:
-          Arn:
-            Fn::ImportValue: !Sub ${StackNamePrefix}-nodegroup-common-WorkerNodeInstanceProfileArn
-        ImageId: !Ref NodeImageId
-        SecurityGroupIds:
-          - Fn::ImportValue: !Sub ${StackNamePrefix}-nodegroup-common-WorkerNodeSecurityGroup
-        TagSpecifications:
-          - ResourceType: instance
-            Tags:
-              - { Key: Name, Value: !Sub '${AWS::StackName}-node' }
-              - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned }
-          - ResourceType: volume
-            Tags:
-              - { Key: Name, Value: !Sub '${AWS::StackName}-volume' }
-        UserData:
-          Fn::Base64:
-            !Sub |
-              #!/bin/bash
-              set -o xtrace
-              yum install -y amazon-ssm-agent
-              systemctl start amazon-ssm-agent
-              /etc/eks/bootstrap.sh ${StackNamePrefix}-eks-cluster
-
-  NodeGroupA:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      MixedInstancesPolicy:
-        InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: 0
-        LaunchTemplate:
-          LaunchTemplateSpecification:
-            LaunchTemplateId: !Ref NodeLaunchTemplate
-            Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
-          Overrides:
-            - InstanceType: m5.large
-            - InstanceType: m4.large
-      DesiredCapacity: !Ref NodeAutoScalingGroupADesiredCapacity
-      MinSize: !Ref NodeAutoScalingGroupMinSize
-      MaxSize: !Ref NodeAutoScalingGroupMaxSize
-      VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
-      Tags:
-        - { Key: Name, Value: !Sub '${AWS::StackName}-asg-a', PropagateAtLaunch: false }
-        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
-        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
-        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
-
-  NodeGroupB:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      MixedInstancesPolicy:
-        InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: 0
-        LaunchTemplate:
-          LaunchTemplateSpecification:
-            LaunchTemplateId: !Ref NodeLaunchTemplate
-            Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
-          Overrides:
-            - InstanceType: m5.large
-            - InstanceType: m4.large
-      DesiredCapacity: !Ref NodeAutoScalingGroupBDesiredCapacity
-      MinSize: !Ref NodeAutoScalingGroupMinSize
-      MaxSize: !Ref NodeAutoScalingGroupMaxSize
-      VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
-      Tags:
-        - { Key: Name, Value: !Sub '${AWS::StackName}-asg-b', PropagateAtLaunch: false }
-        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
-        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
-        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
+      AmiType: AL2_x86_64
+      CapacityType: SPOT
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      InstanceTypes:
+        - m4.large
+        - m5.large
+        - m5a.large
+        - m5d.large
+        - m5ad.large
+      NodeRole:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-WorkerNodeInstanceRoleArn
+      ScalingConfig:
+        DesiredSize: 1
+        MinSize: 1
+        MaxSize: 4
+      Subnets:
+        - !ImportValue infra-vpc-sn-nat-a # private
+        - !ImportValue infra-vpc-sn-nat-b # private
