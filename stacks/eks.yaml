@@ -1,0 +1,58 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon EKS Cluster
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+  EKSServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+        - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+
+  ControlPlaneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${AWS::StackName}-sg
+      GroupDescription: !Sub Security Group for EKS Cluster control plane (${AWS::StackName})
+      VpcId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-VpcId
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-sg
+
+  EKSControlPlane:
+    Type: AWS::EKS::Cluster
+    Properties:
+      Name: !Sub ${AWS::StackName}-cluster
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - !Ref ControlPlaneSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
+          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
+          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet01
+          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet02
+      RoleArn: !GetAtt EKSServiceRole.Arn
+      Version: '1.14'
+
+Outputs:
+  ControlPlaneSecurityGroupId:
+    Description: Security droup ID of the EKS control plane security group
+    Value: !Ref ControlPlaneSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ControlPlaneSecurityGroupId

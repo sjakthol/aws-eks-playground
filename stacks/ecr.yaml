@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: ECR repositories for EKS Playground services
+
+Resources:
+  HelloWorld:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: eksplayground/hello-world
+      Tags:
+        - { Key: Name, Value: eksplayground/hello-world }
