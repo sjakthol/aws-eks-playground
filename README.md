@@ -5,6 +5,7 @@ A collection of notes / configs / scripts / resources to try out Kubernetes in A
 Notes:
 * Search and replace 00000000000 with you AWS account ID
 * Search and replace eu-north-1 with the AWS region you want to use
+* Search and replace en1 with the prefix for AWS region you want to use
 
 ## Deploy and configure Kubernetes cluster
 
