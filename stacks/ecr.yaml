@@ -8,3 +8,24 @@ Resources:
       RepositoryName: eksplayground/hello-world
       Tags:
         - { Key: Name, Value: eksplayground/hello-world }
+
+  Spark:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: spark/spark
+      Tags:
+        - { Key: Name, Value: spark/spark }
+
+  SparkPy:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: spark/spark-py
+      Tags:
+        - { Key: Name, Value: spark/spark-py }
+
+  SparkR:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: spark/spark-r
+      Tags:
+        - { Key: Name, Value: spark/spark-r }

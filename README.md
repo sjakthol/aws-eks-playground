@@ -15,8 +15,9 @@ General notes:
 5. [Enable Horizontal Pod Autoscaler (HPA) for the hello-world Deployment](#enable-horizontal-pod-autoscaler-hpa-for-the-hello-world-deployment)
 6. [Cluster Autoscaler (CA)](#cluster-autoscaler-ca)
 7. [IAM Roles for Service Accounts](#iam-roles-for-service-accounts)
-8. [Cleanup](#cleanup)
-9. [Credits](#credits)
+8. [Spark on EKS](#spark-on-eks)
+9. [Cleanup](#cleanup)
+10. [Credits](#credits)
 
 ## Deploy and configure Kubernetes cluster
 
@@ -181,6 +182,22 @@ aws sts get-caller-identity
 aws eks list-clusters
 ```
 
+## Spark on EKS
+Apache Spark supports Kubernetes as scheduling backend for Spark application. Use the following commands to run Spark on EKS:
+
+```bash
+# Build Docker image(s) for Spark, PySpark and SparkR.
+(cd components/spark && make build)
+
+# Setup service account for Spark
+kubectl apply -f components/spark/deployment/serviceaccount.yaml
+
+# Submit example application (SparkPi included in the default Docker image)
+(cd components/spark && make submit)
+```
+
+To be continued...
+
 ## Cleanup
 
 Delete hello-world Deployment gracefully (to ensure ELB gets terminated):
@@ -196,7 +213,7 @@ make delete-oidc-provider
 
 Delete stacks in reverse order:
 ```bash
-(make delete-nodegroup | cfn-monitor) && (make delete-eks | cfn-monitor) && (make delete-vpc | cfn-monitor) && (make delete-ecr | cfn-monitor)
+(make -j delete-nodegroup delete-irsa-roles | cfn-monitor) && (make delete-eks | cfn-monitor) && (make delete-vpc | cfn-monitor) && (make delete-ecr | cfn-monitor)
 ```
 
 * Note: ECR fails to delete if you don't remove all the images from the repositories before deleting the stack.
