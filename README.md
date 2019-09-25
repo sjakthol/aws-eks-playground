@@ -2,10 +2,21 @@
 
 A collection of notes / configs / scripts / resources to try out Kubernetes in Amazon EKS.
 
-Notes:
+General notes:
 * Search and replace 00000000000 with you AWS account ID
 * Search and replace eu-north-1 with the AWS region you want to use
 * Search and replace en1 with the prefix for AWS region you want to use
+
+**Table of Contents**
+1. [Deploy and configure Kubernetes cluster](#deploy-and-configure-kubernetes-cluster)
+2. [Deploy kubernetes-dashboard](#deploy-kubernetes-dashboard)
+3. [Deploy hello-world Pod](#deploy-hello-world-pod)
+4. [Deploy hello-world Deployment](#deploy-hello-world-deployment)
+5. [Enable Horizontal Pod Autoscaler (HPA) for the hello-world Deployment](#enable-horizontal-pod-autoscaler-hpa-for-the-hello-world-deployment)
+6. [Cluster Autoscaler (CA)](#cluster-autoscaler-ca)
+7. [IAM Roles for Service Accounts](#iam-roles-for-service-accounts)
+8. [Cleanup](#cleanup)
+9. [Credits](#credits)
 
 ## Deploy and configure Kubernetes cluster
 
@@ -141,11 +152,46 @@ kubectl get deployments --watch -o wide
 kubectl get nodes --watch -o wide
 ```
 
+## IAM Roles for Service Accounts
+IAM Roles for Service Accounts (IRSA) give pods a dedicated IAM role to operate on AWS APIs. See https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/ for details.
+
+Use the following commands to setup IRSA:
+```bash
+# Create OpenID Connect Provider to the IAM service for the EKS OIDC
+make create-oidc-provider
+
+# Create IRSA capable IAM roles
+make deploy-irsa-roles
+```
+
+To deploy a component that uses a sample role, run the following:
+```bash
+# Create service account that is assigned with the irsa-test role from the irsa-roles stack
+kubectl apply -f components/irsa-test/deployment/serviceaccount.yaml
+
+# Create pod that uses this service account
+kubectl apply -f components/irsa-test/deployment/pod.yaml
+
+# Log into the pod to see the role in action
+kubectl exec -ti irsa-test-pod bash
+
+# Install AWS CLI to test the role
+pip install awscli
+aws sts get-caller-identity
+aws eks list-clusters
+```
+
 ## Cleanup
 
 Delete hello-world Deployment gracefully (to ensure ELB gets terminated):
 ```
 kubectl delete -f components/hello-world/deployment/
+```
+
+Delete irsa-test resources & OIDC provider for IRSA (if deployed)
+```
+kubectl delete -f components/irsa-test/deployment/
+make delete-oidc-provider
 ```
 
 Delete stacks in reverse order:

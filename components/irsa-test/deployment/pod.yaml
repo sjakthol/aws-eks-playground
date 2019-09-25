@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: irsa-test-pod
+  labels:
+    app: irsa-test-pod
+  namespace: default
+spec:
+  serviceAccountName: irsa-test
+  containers:
+  - name: irsa-test
+    image: python
+    command:
+      - sleep
+      - 1000d
