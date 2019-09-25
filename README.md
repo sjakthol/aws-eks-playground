@@ -209,7 +209,7 @@ The contents of this repository have been scraped together from the following so
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
 * Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-one-asg.yaml (Apache 2.0)
 * Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v1.10.0/src/deploy/recommended/kubernetes-dashboard.yaml (Apache 2.0)
-* Kubernetes Metrics Server deployment: https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8%2B ()
+* Kubernetes Metrics Server deployment: https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8%2B (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * VPC template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 
