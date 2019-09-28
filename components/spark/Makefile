@@ -23,10 +23,10 @@ AWS_REGION ?= eu-north-1
 AWS_PROFILE ?= default
 
 AWS_CMD := $(AWS) --profile $(AWS_PROFILE) --region $(AWS_REGION)
-AWS_ACCOUNT_ID ?= 000000000000
+AWS_ACCOUNT_ID = $(eval AWS_ACCOUNT_ID := $(shell $(AWS_CMD) sts get-caller-identity --query Account --output text))$(AWS_ACCOUNT_ID)
 
 NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
-ECR_REPOSITORY := $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
+ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
 
 STACK_REGION_PREFIX := $(AWS_$(AWS_REGION)_PREFIX)
 STACK_PREFIX := $(STACK_REGION_PREFIX)-eksplayground
@@ -45,8 +45,8 @@ spark-$(SPARK_VERSION)-bin-hadoop2.7:
 	curl -sSfLo spark-$(SPARK_VERSION)-bin-hadoop2.7/jars/kubernetes-model-common-4.4.2.jar https://repo1.maven.org/maven2/io/fabric8/kubernetes-model-common/4.4.2/kubernetes-model-common-4.4.2.jar
 
 build: login spark-$(SPARK_VERSION)-bin-hadoop2.7
-	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p ./kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
-	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p ./kubernetes/dockerfiles/spark/bindings/python/Dockerfile push
+	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) build
+	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) push
 
 ca.pem:
 	$(AWS_CMD) eks describe-cluster --name $(STACK_PREFIX)-eks-cluster --output text --query cluster.certificateAuthority.data | base64 -d > $@
