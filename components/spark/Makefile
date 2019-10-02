@@ -44,6 +44,10 @@ spark-$(SPARK_VERSION)-bin-hadoop2.7:
 	curl -sSfLo spark-$(SPARK_VERSION)-bin-hadoop2.7/jars/kubernetes-model-4.4.2.jar https://repo1.maven.org/maven2/io/fabric8/kubernetes-model/4.4.2/kubernetes-model-4.4.2.jar
 	curl -sSfLo spark-$(SPARK_VERSION)-bin-hadoop2.7/jars/kubernetes-model-common-4.4.2.jar https://repo1.maven.org/maven2/io/fabric8/kubernetes-model-common/4.4.2/kubernetes-model-common-4.4.2.jar
 
+	# Apply some fixes and modifications
+	cd spark-$(SPARK_VERSION)-bin-hadoop2.7/ && patch -p1 < ../patches/01-backport-spark-26083.patch
+	cd spark-$(SPARK_VERSION)-bin-hadoop2.7/ && patch -p1 < ../patches/02-install-hadoop-aws.patch
+
 build: login spark-$(SPARK_VERSION)-bin-hadoop2.7
 	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) build
 	cd spark-$(SPARK_VERSION)-bin-hadoop2.7 && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) push
