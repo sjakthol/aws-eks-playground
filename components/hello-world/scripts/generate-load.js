@@ -68,7 +68,7 @@ function getAgent() {
  */
 function callback(err) {
     if (err) {
-        return console.log(err)
+        console.log(err)
     }
 
     requestFinished()
