@@ -196,7 +196,34 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
-To be continued...
+### JupyterLab with PySpark on EKS
+The `components/spark-jupyter/` folder has a setup that allows you to run PySpark
+code via JupyterLab interface on the EKS cluster (JupyterLab runs as pod, PySpark
+driver runs inside JupyterLab pod, PySpark executors run as separate Pods).
+
+Use the following commands to start JupyterLab with PySpark code running on
+EKS:
+
+```bash
+
+# Prerequisites: Spark images and service account have been created.
+
+# Build the JupyterLab image
+(cd components/spark-jupyter/ && make push)
+
+# Start JupyterLab instance as pod (edit executor counts & sizes in the pod config
+# as required)
+kubectl apply -f components/spark-jupyter/deployment/pod.yaml
+
+# Forward JupyterLab and Spark UI ports
+kubectl port-forward jupyter 8888 4040 >/dev/null 2>&1 &
+
+# Find JupyterLab secret link (choose one with 127.0.0.1 as the IP)
+kubectl logs jupyter
+
+# Open the link in your browser, start writing Spark code
+# > spark
+```
 
 ## Cleanup
 
