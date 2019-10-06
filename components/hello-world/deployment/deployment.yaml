@@ -1,24 +1,32 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-world-deployment
+  labels:
+    app: hello-world-deployment
   namespace: default
 spec:
-  replicas: 1
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-world-pod
   template:
     metadata:
+      name: hello-world-pod
       labels:
-        app: hello-world-deployment
+        app: hello-world-pod
     spec:
       containers:
       - name: hello-world
-        image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/eksplayground/hello-world
+        image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/eksplayground/hello-world@sha256:f65b99a52fc79d8bf9b9a7061f2db4056a0435fcc5cb054bc4ee6c575421aa6a
         resources:
           requests:
-            cpu: 250m
-          limits:
             cpu: 500m
+            memory: 50Mi
+          limits:
+            cpu: 1
+            memory: 150Mi
 
 ---
 apiVersion: v1
@@ -27,10 +35,10 @@ metadata:
   name: hello-world-service
   namespace: default
 spec:
-  ports:
-    - port: 8080
-      targetPort: 8080
-      protocol: TCP
   type: LoadBalancer
   selector:
-    app: hello-world-deployment
+    app: hello-world-pod
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

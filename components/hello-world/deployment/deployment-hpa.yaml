@@ -8,11 +8,11 @@ spec:
     kind: Deployment
     name: hello-world-deployment
   minReplicas: 1
-  maxReplicas: 16
+  maxReplicas: 9
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 50
+        averageUtilization: 80

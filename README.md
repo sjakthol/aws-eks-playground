@@ -104,7 +104,7 @@ curl elb:8080/
 
 # Put some load on the system
 parallel --jobs 16 --progress -n0 time curl -sS <elb>:8080/hash?value=test ::: {0..10000}
-node components/hello-world/scripts/generate-load.js http://<elb>:8080/hash?value=test
+node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 4 -d 60
 ```
 
 ## Enable Horizontal Pod Autoscaler (HPA) for the hello-world Deployment

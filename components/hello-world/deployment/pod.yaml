@@ -12,11 +12,11 @@ spec:
     image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/eksplayground/hello-world
     resources:
       requests:
-        cpu: 100m
-        memory: 50mi
-      limits:
         cpu: 500m
-        memory: 150mi
+        memory: 50Mi
+      limits:
+        cpu: 1
+        memory: 150Mi
 
 ---
 apiVersion: v1
