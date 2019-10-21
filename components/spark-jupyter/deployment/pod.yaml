@@ -23,12 +23,13 @@ spec:
           --conf spark.kubernetes.driver.pod.name=jupyter
           --conf spark.driver.host=$(hostname -i)
           --conf spark.executor.instances=3
-          --conf spark.executor.memory=512M
+          --conf spark.kubernetes.executor.request.cores=0.85
+          --conf spark.executor.memory=1200M
 
     resources:
       requests:
-        cpu: 1
-        memory: 512Mi
+        cpu: 1.5
+        memory: 3Gi
       limits:
-        cpu: 1
-        memory: 512Mi
+        cpu: 2
+        memory: 3Gi

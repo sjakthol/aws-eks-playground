@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Supporting resources for running Spark on Kubernetes
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-jupyter-notebooks'
+      Tags:
+        - { Key: 'Name', Value: !Sub '${AWS::StackName}-jupyter-notebooks' }
