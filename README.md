@@ -196,6 +196,22 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
+### PySpark on EKS
+The `components/spark-pyspark/` folder has an example for how a PySpark
+application can be executed on an EKS cluster. Use the following commands to
+try it out:
+
+```bash
+# NOTE: Requires Spark Docker images from previous section.
+
+# Build Docker image with the PySpark application embedded into it
+(cd components/spark-pyspark && make build)
+
+# Submit the application to EKS
+(cd components/spark-pyspark && make submit)
+
+```
+
 ### JupyterLab with PySpark on EKS
 The `components/spark-jupyter/` folder has a setup that allows you to run PySpark
 code via JupyterLab interface on the EKS cluster (JupyterLab runs as pod, PySpark
