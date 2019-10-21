@@ -1,4 +1,4 @@
-FROM 748888633826.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:2.4.4
+FROM 000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:2.4.4
 
 RUN set -ex && \
     apk add --no-cache py3-zmq && \
