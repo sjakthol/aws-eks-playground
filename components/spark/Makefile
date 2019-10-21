@@ -63,10 +63,11 @@ submit: spark-$(SPARK_VERSION)-bin-hadoop2.7 ca.pem
 		--deploy-mode cluster \
 		--name spark-pi \
 		--class org.apache.spark.examples.SparkPi \
-		--conf spark.executor.instances=2 \
 		--conf spark.kubernetes.container.image=$(ECR_REPOSITORY)/spark:$(SPARK_VERSION) \
 		--conf spark.kubernetes.authenticate.submission.caCertFile=ca.pem \
 		--conf spark.kubernetes.container.image.pullPolicy=Always \
 		--conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
-		--conf spark.kubernetes.executor.request.cores=0.25 \
+		--conf spark.executor.instances=3 \
+		--conf spark.kubernetes.executor.request.cores=0.85 \
+		--conf spark.executor.memory=1416M \
 		file:///opt/spark/examples/jars/spark-examples_2.11-$(SPARK_VERSION).jar
