@@ -208,6 +208,9 @@ EKS:
 
 # Prerequisites: Spark images and service account have been created.
 
+# Deploy required resources
+make deploy-spark | cfn-monitor
+
 # Build the JupyterLab image
 (cd components/spark-jupyter/ && make push)
 
@@ -222,7 +225,6 @@ kubectl port-forward jupyter 8888 4040 >/dev/null 2>&1 &
 kubectl logs jupyter
 
 # Open the link in your browser, start writing Spark code
-# > spark
 ```
 
 ## Cleanup
@@ -241,6 +243,9 @@ make delete-oidc-provider
 Delete stacks in reverse order:
 ```bash
 (make -j delete-nodegroup delete-irsa-roles | cfn-monitor) && (make delete-eks | cfn-monitor) && (make delete-vpc | cfn-monitor) && (make delete-ecr | cfn-monitor)
+
+# If deployed (empty out the bucket first)
+make delete-spark | cfn-monitor
 ```
 
 * Note: ECR fails to delete if you don't remove all the images from the repositories before deleting the stack.
