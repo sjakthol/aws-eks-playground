@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: hello-world
-        image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/eksplayground/hello-world@sha256:f65b99a52fc79d8bf9b9a7061f2db4056a0435fcc5cb054bc4ee6c575421aa6a
+        image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/eksplayground/hello-world
         resources:
           requests:
             cpu: 500m
