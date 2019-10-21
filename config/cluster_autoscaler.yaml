@@ -135,8 +135,8 @@ spec:
             - --stderrthreshold=info
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
-            - --scale-down-delay-after-add=30s
-            - --scale-down-unneeded-time=30s
+            - --scale-down-delay-after-add=300s
+            - --scale-down-unneeded-time=300s
             - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/en1-eksplayground-eks-cluster
           env:
             - name: AWS_REGION
