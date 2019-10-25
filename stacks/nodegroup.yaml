@@ -63,7 +63,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      RoleName: !Sub ${AWS::StackName}-woker-role
+      RoleName: !Sub ${AWS::StackName}-worker-role
 
   K8SClusterAutoscalerPolicy:
     Type: AWS::IAM::Policy
