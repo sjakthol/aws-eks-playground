@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -7,7 +8,7 @@ metadata:
   name: cluster-autoscaler
   namespace: kube-system
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: cluster-autoscaler
@@ -41,14 +42,17 @@ rules:
   resources: ["poddisruptionbudgets"]
   verbs: ["watch","list"]
 - apiGroups: ["apps"]
-  resources: ["statefulsets"]
+  resources: ["statefulsets", "replicasets", "daemonsets"]
   verbs: ["watch","list","get"]
 - apiGroups: ["storage.k8s.io"]
   resources: ["storageclasses"]
   verbs: ["watch","list","get"]
+- apiGroups: ["batch", "extensions"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "patch"]
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: cluster-autoscaler
@@ -66,7 +70,7 @@ rules:
   verbs: ["delete","get","update"]
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: cluster-autoscaler
@@ -83,7 +87,7 @@ subjects:
     namespace: kube-system
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: cluster-autoscaler
@@ -101,7 +105,7 @@ subjects:
     namespace: kube-system
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cluster-autoscaler
@@ -120,7 +124,7 @@ spec:
     spec:
       serviceAccountName: cluster-autoscaler
       containers:
-        - image: k8s.gcr.io/cluster-autoscaler:v1.2.2
+        - image: k8s.gcr.io/cluster-autoscaler:v1.14.4
           name: cluster-autoscaler
           resources:
             limits:
@@ -135,6 +139,7 @@ spec:
             - --stderrthreshold=info
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
+            - --expander=least-waste
             - --scale-down-delay-after-add=300s
             - --scale-down-unneeded-time=300s
             - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/en1-eksplayground-eks-cluster
@@ -150,5 +155,3 @@ spec:
         - name: ssl-certs
           hostPath:
             path: "/etc/ssl/certs/ca-bundle.crt"
-
-
