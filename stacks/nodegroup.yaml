@@ -4,20 +4,10 @@ Description: Amazon EKS - Node Group
 
 Parameters:
 
-  KeyName:
-    Description: The EC2 Key Pair to allow SSH access to the instances
-    Type: AWS::EC2::KeyPair::KeyName
-    Default: sjakthol
-
   NodeImageId:
-    Description: AMI id for the node instances.
-    Type: AWS::EC2::Image::Id
-    Default: ami-0a4a5386eb62c775e
-
-  NodeInstanceType:
-    Description: EC2 instance type for the node instances
-    Type: String
-    Default: m5.large
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: /aws/service/eks/optimized-ami/1.14/amazon-linux-2/recommended/image_id
+    Description: AWS Systems Manager Parameter Store parameter of the AMI ID for the worker node instances.
 
   NodeAutoScalingGroupMinSize:
     Description: Minimum size of Node Group ASG.
@@ -86,14 +76,14 @@ Resources:
               - autoscaling:SetDesiredCapacity
               - autoscaling:TerminateInstanceInAutoScalingGroup
             Resource:
-              - !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${NodeGroup}
+              - !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${StackNamePrefix}-*
       Roles:
         - !Ref NodeInstanceRole
 
   SparkDataAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: NotebookAccessPolicy
+      PolicyName: SparkDataAccessPolicy
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -200,37 +190,25 @@ Resources:
     Properties:
       MixedInstancesPolicy:
         InstancesDistribution:
-          OnDemandAllocationStrategy: prioritized
-          OnDemandBaseCapacity: 0
           OnDemandPercentageAboveBaseCapacity: 0
-          SpotAllocationStrategy: lowest-price
-          SpotInstancePools: 2
         LaunchTemplate:
           LaunchTemplateSpecification:
             LaunchTemplateId: !Ref NodeLaunchTemplate
             Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
           Overrides:
-            - InstanceType: c5.large
-            - InstanceType: c4.large
+            - InstanceType: m5.large
+            - InstanceType: m4.large
       DesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity
       MinSize: !Ref NodeAutoScalingGroupMinSize
       MaxSize: !Ref NodeAutoScalingGroupMaxSize
       VPCZoneIdentifier:
-          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
-          - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
+        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
+        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
       Tags:
-        - Key: Name
-          Value: !Sub ${AWS::StackName}-node
-          PropagateAtLaunch: true
-        - Key: !Sub kubernetes.io/cluster/${StackNamePrefix}-eks-cluster
-          Value: owned
-          PropagateAtLaunch: false
-        - Key: k8s.io/cluster-autoscaler/enabled
-          Value: '1'
-          PropagateAtLaunch: false
-        - Key: !Sub k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster
-          Value: '1'
-          PropagateAtLaunch: false
+        - { Key: Name, Value: !Sub '${AWS::StackName}-asg', PropagateAtLaunch: false }
+        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
+        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
+        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
 
     UpdatePolicy:
       AutoScalingRollingUpdate:
@@ -246,8 +224,6 @@ Resources:
         IamInstanceProfile:
           Arn: !GetAtt NodeInstanceProfile.Arn
         ImageId: !Ref NodeImageId
-        InstanceType: !Ref NodeInstanceType
-        KeyName: !Ref KeyName
         SecurityGroupIds:
           - !Ref NodeSecurityGroup
         TagSpecifications:
