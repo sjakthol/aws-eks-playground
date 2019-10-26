@@ -139,6 +139,7 @@ spec:
             - --stderrthreshold=info
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
+            - --balance-similar-node-groups
             - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/en1-eksplayground-eks-cluster
           volumeMounts:
             - name: ssl-certs

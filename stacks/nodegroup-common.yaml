@@ -1,0 +1,186 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon EKS - Common resources for worker node groups
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+
+  WorkerNodeInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
+  WorkerNodeInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      RoleName: !Sub ${AWS::StackName}-worker-role
+
+  K8SClusterAutoscalerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: K8SClusterAutoscalerPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowReadOnlyActions
+            Effect: Allow
+            Action:
+              - autoscaling:DescribeAutoScalingGroups
+              - autoscaling:DescribeAutoScalingInstances
+              - autoscaling:DescribeLaunchConfigurations
+              - autoscaling:DescribeTags
+            Resource: "*"
+          - Sid: AllowASGManagement
+            Effect: Allow
+            Action:
+              - autoscaling:SetDesiredCapacity
+              - autoscaling:TerminateInstanceInAutoScalingGroup
+            Resource:
+              - !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${StackNamePrefix}-*
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
+  SparkDataAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SparkDataAccessPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AccessToNotebookBucket
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:PutObject
+            Resource:
+              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks'
+              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks/*'
+          - Sid: AccessToSampleDataBuckets
+            Effect: Allow
+            Action:
+              - s3:ListBucket
+              - s3:GetObject
+            Resource:
+              - 'arn:aws:s3:::amazon-reviews-pds'
+              - 'arn:aws:s3:::amazon-reviews-pds/*'
+              - 'arn:aws:s3:::ew1-infra-trail'
+              - 'arn:aws:s3:::ew1-infra-trail/*'
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
+  WorkerNodeSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub Security Group for EKS cluster worker nodes (${StackNamePrefix}-eks-cluster)
+      GroupName: !Sub '${AWS::StackName}-worker-sg'
+      VpcId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-VpcId
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-worker-sg' }
+        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned }
+
+  NodeSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow node to communicate with each other
+      GroupId: !Ref WorkerNodeSecurityGroup
+      SourceSecurityGroupId: !Ref WorkerNodeSecurityGroup
+      IpProtocol: '-1'
+      FromPort: 0
+      ToPort: 65535
+
+  NodeSecurityGroupFromControlPlaneIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow worker Kubelets and pods to receive communication from the cluster control plane
+      GroupId: !Ref WorkerNodeSecurityGroup
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 1025
+      ToPort: 65535
+
+  ControlPlaneEgressToNodeSecurityGroup:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: Allow the cluster control plane to communicate with worker Kubelet and pods
+      GroupId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
+      DestinationSecurityGroupId: !Ref WorkerNodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1025
+      ToPort: 65535
+
+  NodeSecurityGroupFromControlPlaneOn443Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow pods running extension API servers on port 443 to receive communication from cluster control plane
+      GroupId: !Ref WorkerNodeSecurityGroup
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
+  ControlPlaneEgressToNodeSecurityGroupOn443:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: Allow the cluster control plane to communicate with pods running extension API servers on port 443
+      GroupId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
+      DestinationSecurityGroupId: !Ref WorkerNodeSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
+  ClusterControlPlaneSecurityGroupIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Allow pods to communicate with the cluster API Server
+      GroupId:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
+      SourceSecurityGroupId: !Ref WorkerNodeSecurityGroup
+      IpProtocol: tcp
+      ToPort: 443
+      FromPort: 443
+
+Outputs:
+
+  WorkerNodeInstanceRoleArn:
+    Description: The IAM Role ARN for EKS workers
+    Value: !GetAtt WorkerNodeInstanceRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerNodeInstanceRoleArn
+
+  WorkerNodeInstanceProfileArn:
+    Description: The IAM Role ARN for EKS workers
+    Value: !GetAtt WorkerNodeInstanceProfile.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerNodeInstanceProfileArn
+
+  WorkerNodeSecurityGroup:
+    Description: The security group for EKS workers
+    Value: !Ref WorkerNodeSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-WorkerNodeSecurityGroup

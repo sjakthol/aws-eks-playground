@@ -36,6 +36,7 @@ deploy-$(basename $(notdir $(1))): $(1)
 		--stack-name $(STACK_PREFIX)-$(basename $(notdir $(1))) \
 		--tags $(TAGS) \
 		--parameter-overrides StackNamePrefix=$(STACK_PREFIX) $$(EXTRA_PARAMETERS) \
+		--no-fail-on-empty-changeset \
 		--capabilities CAPABILITY_NAMED_IAM \
 		--template-file $(1)
 
@@ -66,3 +67,32 @@ render-irsa-roles:
 
 deploy-irsa-roles: render-irsa-roles
 deploy-irsa-roles: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
+
+deploy-all:
+	# Create ECR repositories for storing container images this guide requires.
+	$(MAKE) deploy-ecr | cfn-monitor
+
+	# Create a VPC with two public and two private subnets (with NAT) for the EKS control plane and worker nodes.
+	$(MAKE) deploy-vpc | cfn-monitor
+
+	# Create the EKS control plane for the cluster
+	$(MAKE) deploy-eks | cfn-monitor
+
+	# Configure kubectl with credentials needed to access the cluster
+	$(AWS_CMD) eks update-kubeconfig --name $(STACK_PREFIX)-eks-cluster
+
+	# Configure Kubernetes to let worker nodes attach to the cluster
+	kubectl apply -f config/aws-auth-cm.yaml
+
+	# Create common resources for worker nodes (IAM Roles, SGs)
+	$(MAKE) deploy-nodegroup-common | cfn-monitor
+
+	# Create ASGs for worker nodes
+	$(MAKE) deploy-nodegroup | cfn-monitor
+
+cleanup-simple:
+	$(MAKE) delete-irsa-roles | cfn-monitor
+	$(MAKE) delete-nodegroup | cfn-monitor
+	$(MAKE) delete-nodegroup-common | cfn-monitor
+	$(MAKE) delete-eks | cfn-monitor
+	$(MAKE) delete-vpc | cfn-monitor

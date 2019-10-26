@@ -6,6 +6,7 @@ General notes:
 * Search and replace 000000000000 with you AWS account ID
 * Search and replace eu-north-1 with the AWS region you want to use
 * Search and replace en1 with the prefix for AWS region you want to use
+* Makefile targets require [cfn-monitor](https://github.com/sjakthol/cfn-monitor) tool (install with `npm i -g cfn-monitor`)
 
 **Table of Contents**
 1. [Deploy and configure Kubernetes cluster](#deploy-and-configure-kubernetes-cluster)
@@ -21,26 +22,20 @@ General notes:
 
 ## Deploy and configure Kubernetes cluster
 
-1. Deploy CloudFormation stacks (VPC, EKS control plane, worker nodegroup and ECR repositories for test images)
+Execute the following commands to get a working EKS cluster:
+
 ```bash
 export AWS_REGION=eu-north-1
 export AWS_PROFILE=admin # need to be able to do lots of actions including setting up IAM roles
-(make -j deploy-ecr deploy-vpc | cfn-monitor) && (make deploy-eks | cfn-monitor) && (make deploy-nodegroup | cfn-monitor)
-```
 
-2. Update kubeconfig for the new cluster
-```bash
-aws --region eu-north-1 eks update-kubeconfig --name en1-eksplayground-eks-cluster
-```
-
-3. Apply AWS auth configmap to let worker nodes attach to the cluster
-```bash
-# Deploy
-kubectl apply -f config/aws-auth-cm.yaml
+# Deploy all stacks required for this setup (ECR, VPC, EKS, Node Groups)
+make deploy-all
 
 # Wait for node(s) to be READY
 kubectl get nodes --watch -o wide
 ```
+
+See the Makefile for details on the steps it takes to get a working Kubernetes cluster.
 
 ## Deploy kubernetes-dashboard
 
@@ -256,16 +251,19 @@ kubectl delete -f components/irsa-test/deployment/
 make delete-oidc-provider
 ```
 
-Delete stacks in reverse order:
+Delete stacks:
 ```bash
-(make -j delete-nodegroup delete-irsa-roles | cfn-monitor) && (make delete-eks | cfn-monitor) && (make delete-vpc | cfn-monitor) && (make delete-ecr | cfn-monitor)
+# Delete stacks that do not hold any state / data
+make cleanup-simple
 
 # If deployed (empty out the bucket first)
 make delete-spark | cfn-monitor
+
+# Delete ECR repositories (clean the repositories manually first)
+make delete-ecr | cfn-monitor
 ```
 
-* Note: ECR fails to delete if you don't remove all the images from the repositories before deleting the stack.
-* Note 2: You might want to check that no ELBs were left running
+* Note: You might want to check that no ELBs were left running
 
 ## Credits
 

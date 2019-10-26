@@ -12,17 +12,22 @@ Parameters:
   NodeAutoScalingGroupMinSize:
     Description: Minimum size of Node Group ASG.
     Type: Number
-    Default: 1
+    Default: 0
 
   NodeAutoScalingGroupMaxSize:
     Description: Maximum size of Node Group ASG. Set to at least 1 greater than NodeAutoScalingGroupDesiredCapacity.
     Type: Number
     Default: 4
 
-  NodeAutoScalingGroupDesiredCapacity:
-    Description: Desired capacity of Node Group ASG.
+  NodeAutoScalingGroupADesiredCapacity:
+    Description: Initial desired capacity of Node Group ASG in AZ-A.
     Type: Number
     Default: 1
+
+  NodeAutoScalingGroupBDesiredCapacity:
+    Description: Initial desired capacity of Node Group ASG in AZ-B.
+    Type: Number
+    Default: 0
 
   StackNamePrefix:
     Description: A prefix for the stacks in this setup.
@@ -30,202 +35,17 @@ Parameters:
 
 Resources:
 
-  NodeInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: "/"
-      Roles:
-        - !Ref NodeInstanceRole
-
-  NodeInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      Path: "/"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
-        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
-        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      RoleName: !Sub ${AWS::StackName}-worker-role
-
-  K8SClusterAutoscalerPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: K8SClusterAutoscalerPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AllowReadOnlyActions
-            Effect: Allow
-            Action:
-              - autoscaling:DescribeAutoScalingGroups
-              - autoscaling:DescribeAutoScalingInstances
-              - autoscaling:DescribeLaunchConfigurations
-              - autoscaling:DescribeTags
-            Resource: "*"
-          - Sid: AllowASGManagement
-            Effect: Allow
-            Action:
-              - autoscaling:SetDesiredCapacity
-              - autoscaling:TerminateInstanceInAutoScalingGroup
-            Resource:
-              - !Sub arn:aws:autoscaling:${AWS::Region}:${AWS::AccountId}:autoScalingGroup:*:autoScalingGroupName/${StackNamePrefix}-*
-      Roles:
-        - !Ref NodeInstanceRole
-
-  SparkDataAccessPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: SparkDataAccessPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AccessToNotebookBucket
-            Effect: Allow
-            Action:
-              - s3:ListBucket
-              - s3:DeleteObject
-              - s3:GetObject
-              - s3:PutObject
-            Resource:
-              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks'
-              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks/*'
-          - Sid: AccessToSampleDataBuckets
-            Effect: Allow
-            Action:
-              - s3:ListBucket
-              - s3:GetObject
-            Resource:
-              - 'arn:aws:s3:::amazon-reviews-pds'
-              - 'arn:aws:s3:::amazon-reviews-pds/*'
-              - 'arn:aws:s3:::ew1-infra-trail'
-              - 'arn:aws:s3:::ew1-infra-trail/*'
-      Roles:
-        - !Ref NodeInstanceRole
-
-  NodeSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Security group for all nodes in the cluster
-      VpcId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-VpcId
-      Tags:
-        - Key: !Sub kubernetes.io/cluster/${StackNamePrefix}-eks-cluster
-          Value: owned
-
-  NodeSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Allow node to communicate with each other
-      GroupId: !Ref NodeSecurityGroup
-      SourceSecurityGroupId: !Ref NodeSecurityGroup
-      IpProtocol: '-1'
-      FromPort: 0
-      ToPort: 65535
-
-  NodeSecurityGroupFromControlPlaneIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Allow worker Kubelets and pods to receive communication from the cluster control plane
-      GroupId: !Ref NodeSecurityGroup
-      SourceSecurityGroupId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
-      IpProtocol: tcp
-      FromPort: 1025
-      ToPort: 65535
-
-  ControlPlaneEgressToNodeSecurityGroup:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      Description: Allow the cluster control plane to communicate with worker Kubelet and pods
-      GroupId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
-      DestinationSecurityGroupId: !Ref NodeSecurityGroup
-      IpProtocol: tcp
-      FromPort: 1025
-      ToPort: 65535
-
-  NodeSecurityGroupFromControlPlaneOn443Ingress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Allow pods running extension API servers on port 443 to receive communication from cluster control plane
-      GroupId: !Ref NodeSecurityGroup
-      SourceSecurityGroupId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-
-  ControlPlaneEgressToNodeSecurityGroupOn443:
-    Type: AWS::EC2::SecurityGroupEgress
-    Properties:
-      Description: Allow the cluster control plane to communicate with pods running extension API servers on port 443
-      GroupId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
-      DestinationSecurityGroupId: !Ref NodeSecurityGroup
-      IpProtocol: tcp
-      FromPort: 443
-      ToPort: 443
-
-  ClusterControlPlaneSecurityGroupIngress:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      Description: Allow pods to communicate with the cluster API Server
-      GroupId:
-        Fn::ImportValue: !Sub ${StackNamePrefix}-eks-ControlPlaneSecurityGroupId
-      SourceSecurityGroupId: !Ref NodeSecurityGroup
-      IpProtocol: tcp
-      ToPort: 443
-      FromPort: 443
-
-  NodeGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      MixedInstancesPolicy:
-        InstancesDistribution:
-          OnDemandPercentageAboveBaseCapacity: 0
-        LaunchTemplate:
-          LaunchTemplateSpecification:
-            LaunchTemplateId: !Ref NodeLaunchTemplate
-            Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
-          Overrides:
-            - InstanceType: m5.large
-            - InstanceType: m4.large
-      DesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity
-      MinSize: !Ref NodeAutoScalingGroupMinSize
-      MaxSize: !Ref NodeAutoScalingGroupMaxSize
-      VPCZoneIdentifier:
-        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
-        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
-      Tags:
-        - { Key: Name, Value: !Sub '${AWS::StackName}-asg', PropagateAtLaunch: false }
-        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
-        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
-        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
-
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MaxBatchSize: 1
-        MinInstancesInService: !Ref NodeAutoScalingGroupDesiredCapacity
-        PauseTime: PT5M
-
   NodeLaunchTemplate:
     Type: "AWS::EC2::LaunchTemplate"
     Properties:
       LaunchTemplateName: !Sub ${AWS::StackName}-template
       LaunchTemplateData:
         IamInstanceProfile:
-          Arn: !GetAtt NodeInstanceProfile.Arn
+          Arn:
+            Fn::ImportValue: !Sub ${StackNamePrefix}-nodegroup-common-WorkerNodeInstanceProfileArn
         ImageId: !Ref NodeImageId
         SecurityGroupIds:
-          - !Ref NodeSecurityGroup
+          - Fn::ImportValue: !Sub ${StackNamePrefix}-nodegroup-common-WorkerNodeSecurityGroup
         TagSpecifications:
           - ResourceType: instance
             Tags:
@@ -242,17 +62,51 @@ Resources:
               yum install -y amazon-ssm-agent
               systemctl start amazon-ssm-agent
               /etc/eks/bootstrap.sh ${StackNamePrefix}-eks-cluster
-              /opt/aws/bin/cfn-signal --exit-code $? \
-                      --stack  ${AWS::StackName} \
-                      --resource NodeGroup  \
-                      --region ${AWS::Region}
 
-Outputs:
+  NodeGroupA:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MixedInstancesPolicy:
+        InstancesDistribution:
+          OnDemandPercentageAboveBaseCapacity: 0
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref NodeLaunchTemplate
+            Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
+          Overrides:
+            - InstanceType: m5.large
+            - InstanceType: m4.large
+      DesiredCapacity: !Ref NodeAutoScalingGroupADesiredCapacity
+      MinSize: !Ref NodeAutoScalingGroupMinSize
+      MaxSize: !Ref NodeAutoScalingGroupMaxSize
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet01
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-asg-a', PropagateAtLaunch: false }
+        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
+        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
+        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
 
-  NodeInstanceRole:
-    Description: The node instance role
-    Value: !GetAtt NodeInstanceRole.Arn
-
-  NodeSecurityGroup:
-    Description: The security group for the node group
-    Value: !Ref NodeSecurityGroup
+  NodeGroupB:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      MixedInstancesPolicy:
+        InstancesDistribution:
+          OnDemandPercentageAboveBaseCapacity: 0
+        LaunchTemplate:
+          LaunchTemplateSpecification:
+            LaunchTemplateId: !Ref NodeLaunchTemplate
+            Version: !GetAtt NodeLaunchTemplate.LatestVersionNumber
+          Overrides:
+            - InstanceType: m5.large
+            - InstanceType: m4.large
+      DesiredCapacity: !Ref NodeAutoScalingGroupBDesiredCapacity
+      MinSize: !Ref NodeAutoScalingGroupMinSize
+      MaxSize: !Ref NodeAutoScalingGroupMaxSize
+      VPCZoneIdentifier:
+        - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PrivateSubnet02
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-asg-b', PropagateAtLaunch: false }
+        - { Key: !Sub 'kubernetes.io/cluster/${StackNamePrefix}-eks-cluster', Value: owned, PropagateAtLaunch: false }
+        - { Key: k8s.io/cluster-autoscaler/enabled, Value: '1', PropagateAtLaunch: false }
+        - { Key: !Sub 'k8s.io/cluster-autoscaler/${StackNamePrefix}-eks-cluster', Value: '1', PropagateAtLaunch: false }
