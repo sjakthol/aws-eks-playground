@@ -68,7 +68,7 @@ render-irsa-roles:
 deploy-irsa-roles: render-irsa-roles
 deploy-irsa-roles: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
 
-deploy-all:
+deploy-simple:
 	# Create ECR repositories for storing container images this guide requires.
 	$(MAKE) deploy-ecr | cfn-monitor
 

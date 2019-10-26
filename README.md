@@ -29,7 +29,7 @@ export AWS_REGION=eu-north-1
 export AWS_PROFILE=admin # need to be able to do lots of actions including setting up IAM roles
 
 # Deploy all stacks required for this setup (ECR, VPC, EKS, Node Groups)
-make deploy-all
+make deploy-simple
 
 # Wait for node(s) to be READY
 kubectl get nodes --watch -o wide
