@@ -182,7 +182,7 @@ Resources:
         Value: !Sub "${AWS::StackName}-PrivateSubnet02"
       - Key: kubernetes.io/role/internal-elb
         Value: '1'
-        
+
   PublicSubnet01RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -206,6 +206,22 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet02
       RouteTableId: !Ref PrivateRouteTable
+
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal: '*'
+            Action: '*'
+            Resource: 'arn:aws:s3:::*'
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
 
 Outputs:
 
