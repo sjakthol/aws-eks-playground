@@ -94,5 +94,6 @@ cleanup-simple:
 	$(MAKE) delete-irsa-roles | cfn-monitor
 	$(MAKE) delete-nodegroup | cfn-monitor
 	$(MAKE) delete-nodegroup-common | cfn-monitor
+	$(MAKE) delete-logging | cfn-monitor
 	$(MAKE) delete-eks | cfn-monitor
 	$(MAKE) delete-vpc | cfn-monitor
