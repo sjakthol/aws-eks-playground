@@ -1,0 +1,9 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Supporting resources for Fluent Bit Logging
+
+Resources:
+  ContainerLogLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+      LogGroupName: !Sub ${AWS::StackName}-container-logs

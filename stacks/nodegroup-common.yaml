@@ -59,6 +59,24 @@ Resources:
       Roles:
         - !Ref WorkerNodeInstanceRole
 
+  FluentBitLoggingPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: FluentBitLoggingPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLoggingActions
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:DescribeLogStreams
+              - logs:PutLogEvents
+            Resource:
+              - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StackNamePrefix}-logging-container-logs:*'
+      Roles:
+        - !Ref WorkerNodeInstanceRole
+
   SparkDataAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:

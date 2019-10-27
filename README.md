@@ -238,6 +238,22 @@ kubectl logs jupyter
 # Open the link in your browser, start writing Spark code
 ```
 
+## Logging with Fluent Bit
+The `components/logging/` contains a Fluent Bit setup for forwarding logs
+from pods to CloudWatch Logs. The included configuration enriches each log
+line with Kubernetes metadata and outputs the logs in JSON format. Use the
+following commands to setup Fluent Bit logging:
+
+```bash
+# Deploy AWS resources
+make deploy-logging | cfn-monitor
+
+# Deploy fluent-bit as a daemonset to every node
+kubectl apply -f components/logging/deployment/
+```
+
+You can find pod container logs from CloudWatch Logs.
+
 ## Cleanup
 
 Delete hello-world Deployment gracefully (to ensure ELB gets terminated):
@@ -275,5 +291,6 @@ The contents of this repository have been scraped together from the following so
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8%2B (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * VPC template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
+* Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)
 
 Other configs based on examples available in Kubernetes Documentation and other random sources in the internet.

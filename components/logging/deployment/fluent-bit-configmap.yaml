@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  labels:
+    app.kubernetes.io/name: fluentbit
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Parsers_File  parsers.conf
+
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        Parser            docker
+        DB                /var/log/flb_kube.db
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+    [FILTER]
+        # Append Kubernetes related metadata to every log entry
+        Name           kubernetes
+        Match          kube.*
+
+        # Parse JSON logs, place the parsed object under log_processed field
+        # and remove the original JSON string from the output
+        Merge_Log      On
+        Merge_Log_Key  log_processed
+        Keep_Log       Off
+
+    [OUTPUT]
+        # Output logs to CloudWatch
+        Name cloudwatch
+        Match kube.*
+        region eu-north-1
+        log_group_name en1-eksplayground-logging-container-logs
+        log_stream_prefix logs.
+
+  parsers.conf: |
+    [PARSER]
+        Name        docker
+        Format      json
+        Time_Key    time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+        Time_Keep   On
+        # Command      |  Decoder | Field | Optional Action
+        # =============|==================|=================
+        Decode_Field_As   escaped    log
