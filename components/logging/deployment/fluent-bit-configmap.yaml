@@ -11,7 +11,8 @@ data:
 
     [INPUT]
         Name              tail
-        Tag               kube.*
+        Tag               kube/<namespace_name>/<pod_name>/<container_name>/<docker_id>
+        Tag_Regex         (?<pod_name>[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*)_(?<namespace_name>[^_]+)_(?<container_name>.+)-(?<docker_id>.+)\.
         Path              /var/log/containers/*.log
         Parser            docker
         DB                /var/log/flb_kube.db
@@ -22,21 +23,23 @@ data:
     [FILTER]
         # Append Kubernetes related metadata to every log entry
         Name           kubernetes
-        Match          kube.*
+        Match          kube/*
 
         # Parse JSON logs, place the parsed object under log_processed field
         # and remove the original JSON string from the output
         Merge_Log      On
         Merge_Log_Key  log_processed
         Keep_Log       Off
+        Kube_Tag_Prefix kube/
+        Regex_Parser   KubeTagCustomRegex
 
     [OUTPUT]
         # Output logs to CloudWatch
         Name cloudwatch
-        Match kube.*
+        Match kube/*
         region eu-north-1
         log_group_name en1-eksplayground-logging-container-logs
-        log_stream_prefix logs.
+        log_stream_prefix logs/
 
   parsers.conf: |
     [PARSER]
@@ -45,6 +48,8 @@ data:
         Time_Key    time
         Time_Format %Y-%m-%dT%H:%M:%S.%L
         Time_Keep   On
-        # Command      |  Decoder | Field | Optional Action
-        # =============|==================|=================
-        Decode_Field_As   escaped    log
+
+    [PARSER]
+        Name        KubeTagCustomRegex
+        Format      regex
+        Regex       (?<namespace_name>[^_]+)/(?<pod_name>[^_]+)/(?<container_name>.+)/(?<docker_id>.+)
