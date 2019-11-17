@@ -1,20 +1,16 @@
-# Some defaults
-AWS ?= aws
-AWS_REGION ?= eu-north-1
-AWS_PROFILE ?= default
-
-AWS_CMD := $(AWS) --profile $(AWS_PROFILE) --region $(AWS_REGION)
-AWS_ACCOUNT_ID = $(eval AWS_ACCOUNT_ID := $(shell $(AWS_CMD) sts get-caller-identity --query Account --output text))$(AWS_ACCOUNT_ID)
+include ../../utils/common.mk
 
 NAME := jupyter
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/spark/spark-py
+
+SPARK_VERSION ?= 2.4.4
 
 login:
 	$(AWS_CMD) ecr get-login --no-include-email | bash
 
 build:
-	docker build -t $(NAME) .
+	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) --build-arg SPARK_VERSION=$(SPARK_VERSION) -t $(NAME) .
 
 push: build login
-	docker tag $(NAME):latest $(ECR_REPOSITORY):jupyter-latest
-	docker push $(ECR_REPOSITORY):jupyter-latest
+	docker tag $(NAME):latest $(ECR_REPOSITORY):jupyter-$(SPARK_VERSION)
+	docker push $(ECR_REPOSITORY):jupyter-$(SPARK_VERSION)

@@ -191,6 +191,8 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
+The Makefiles use Spark v2.4.4 by default. Pass `SPARK_VERSION=3.0.0-preview` to use a preview version of Spark v3.0.0 instead.
+
 ### PySpark on EKS
 The `components/spark-pyspark/` folder has an example for how a PySpark
 application can be executed on an EKS cluster. Use the following commands to
@@ -211,6 +213,9 @@ try it out:
 The `components/spark-jupyter/` folder has a setup that allows you to run PySpark
 code via JupyterLab interface on the EKS cluster (JupyterLab runs as pod, PySpark
 driver runs inside JupyterLab pod, PySpark executors run as separate Pods).
+
+Note: JupyterLab setup does not yet work with Spark 3.0.0 Preview due to
+changes in the Spark baseimage between these two versions (Alpine to Debian).
 
 Use the following commands to start JupyterLab with PySpark code running on
 EKS:
