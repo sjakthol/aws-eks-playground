@@ -214,9 +214,6 @@ The `components/spark-jupyter/` folder has a setup that allows you to run PySpar
 code via JupyterLab interface on the EKS cluster (JupyterLab runs as pod, PySpark
 driver runs inside JupyterLab pod, PySpark executors run as separate Pods).
 
-Note: JupyterLab setup does not yet work with Spark 3.0.0 Preview due to
-changes in the Spark baseimage between these two versions (Alpine to Debian).
-
 Use the following commands to start JupyterLab with PySpark code running on
 EKS:
 
