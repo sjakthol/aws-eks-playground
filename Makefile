@@ -41,6 +41,31 @@ render-irsa-roles:
 deploy-irsa-roles: render-irsa-roles
 deploy-irsa-roles: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
 
+PRIVATE_SUBNET_01 = $(eval PRIVATE_SUBNET_01 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet01`].OutputValue' --output text))$(PRIVATE_SUBNET_01)
+PRIVATE_SUBNET_02 = $(eval PRIVATE_SUBNET_02 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet02`].OutputValue' --output text))$(PRIVATE_SUBNET_02)
+
+deploy-fargate-profile-default:
+	$(AWS_CMD) eks create-fargate-profile \
+		--fargate-profile-name fargate-ns-default \
+		--cluster-name $(STACK_PREFIX)-eks-cluster \
+		--subnets $(PRIVATE_SUBNET_01) $(PRIVATE_SUBNET_02) \
+		--pod-execution-role arn:aws:iam::$(AWS_ACCOUNT_ID):role/$(STACK_PREFIX)-eks-fargate-pod-execution-role \
+		--selectors namespace=default \
+		--tags Name=$(STACK_PREFIX)-eks-fargate-ns-default,Deployment=$(STACK_PREFIX)
+
+deploy-fargate-profile-kube-system:
+	$(AWS_CMD) eks create-fargate-profile \
+		--fargate-profile-name fargate-ns-kube-system \
+		--cluster-name $(STACK_PREFIX)-eks-cluster \
+		--subnets $(PRIVATE_SUBNET_01) $(PRIVATE_SUBNET_02) \
+		--pod-execution-role arn:aws:iam::$(AWS_ACCOUNT_ID):role/$(STACK_PREFIX)-eks-fargate-pod-execution-role \
+		--selectors namespace=kube-system \
+		--tags Name=$(STACK_PREFIX)-eks-fargate-ns-kube-system,Deployment=$(STACK_PREFIX)
+
+	# Allow coredns to be scheduled into Fargate
+	kubectl patch deployment coredns -n kube-system --type json \
+		-p='[{"op": "remove", "path": "/spec/template/metadata/annotations/eks.amazonaws.com~1compute-type"}]'
+
 deploy-simple:
 	# Create ECR repositories for storing container images this guide requires.
 	$(MAKE) deploy-ecr | cfn-monitor

@@ -17,8 +17,9 @@ General notes:
 6. [Cluster Autoscaler (CA)](#cluster-autoscaler-ca)
 7. [IAM Roles for Service Accounts](#iam-roles-for-service-accounts)
 8. [Spark on EKS](#spark-on-eks)
-9. [Cleanup](#cleanup)
-10. [Credits](#credits)
+10. [Fargate](#fargate)
+11. [Cleanup](#cleanup)
+12. [Credits](#credits)
 
 ## Deploy and configure Kubernetes cluster
 
@@ -255,6 +256,22 @@ kubectl apply -f components/logging/deployment/
 ```
 
 You can find pod container logs from CloudWatch Logs.
+
+## Fargate
+
+Amazon EKS can execute pods in AWS Fargate. Use the following commands to setup Fargate
+profile(s) for the EKS cluster:
+
+```bash
+# Execute kube-system pods in Fargate & move coredns there
+make deploy-fargate-profile-kube-system
+
+# Execute all pods from the 'default' namespace in Fargate
+make deploy-fargate-profile-default
+```
+
+Once done, Amazon EKS will schedule pods in the given namespace(s)
+to AWS Fargate instead of EC2 instances.
 
 ## Cleanup
 

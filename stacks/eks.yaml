@@ -50,6 +50,22 @@ Resources:
       RoleArn: !GetAtt EKSServiceRole.Arn
       Version: '1.14'
 
+  FargatePodExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - eks-fargate-pods.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
+      RoleName: !Sub ${AWS::StackName}-fargate-pod-execution-role
+
 Outputs:
   ControlPlaneSecurityGroupId:
     Description: Security droup ID of the EKS control plane security group
