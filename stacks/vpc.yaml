@@ -56,6 +56,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub '${AWS::StackName}-PublicRouteTable'
+      - Key: Network
+        Value: Public
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
@@ -64,6 +66,8 @@ Resources:
       Tags:
       - Key: Name
         Value: !Sub '${AWS::StackName}-PrivateRouteTable'
+      - Key: Network
+        Value: Private01
 
   PublicRoute:
     DependsOn: VPCGatewayAttachment
@@ -108,6 +112,7 @@ Resources:
     Metadata:
       Comment: Subnet 01
     Properties:
+      MapPublicIpOnLaunch: true
       AvailabilityZone:
         Fn::Select:
         - '0'
@@ -128,6 +133,7 @@ Resources:
     Metadata:
       Comment: Subnet 02
     Properties:
+      MapPublicIpOnLaunch: true
       AvailabilityZone:
         Fn::Select:
         - '1'
