@@ -175,7 +175,7 @@ kubectl exec -ti irsa-test-pod bash
 # Install AWS CLI to test the role
 pip install awscli
 aws sts get-caller-identity
-aws eks list-clusters
+aws --region eu-north-1 eks list-clusters
 ```
 
 ## Spark on EKS
@@ -203,7 +203,7 @@ try it out:
 # NOTE: Requires Spark Docker images from previous section.
 
 # Build Docker image with the PySpark application embedded into it
-(cd components/spark-pyspark && make build)
+(cd components/spark-pyspark && make build push)
 
 # Submit the application to EKS
 (cd components/spark-pyspark && make submit)
