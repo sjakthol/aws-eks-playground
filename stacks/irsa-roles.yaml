@@ -12,16 +12,21 @@ Resources:
   IrsaTestRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}'
-          Action: sts:AssumeRoleWithWebIdentity
-          Condition:
-            StringEquals:
-              'oidc.eks.eu-north-1.amazonaws.com/id/PLACEHOLDER:sub': !Sub 'system:serviceaccount:default:irsa-test'
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "oidc.eks.eu-north-1.amazonaws.com/id/FC277300AFD9CF2B8ADD849BF13E7D16:sub": "system:serviceaccount:default:irsa-test"
+              }
+            }
+          }]
+        }
+
       RoleName: !Sub ${AWS::StackName}-irsa-test
       Path: /
       Policies:

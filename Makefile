@@ -33,12 +33,6 @@ delete-oidc-provider:
 		$(AWS_CMD) iam delete-open-id-connect-provider --open-id-connect-provider-arn $$arn; \
 	done
 
-render-irsa-roles:
-	# Put the OIDC Provider ID to the AssumeRolePolicyDocument condition key that
-	# limits the service accounts who are allowed to assume a given role.
-	sed -i "s|oidc.\+:sub|$(OIDC_PROVIDER_ID):sub|g" stacks/irsa-roles.yaml
-
-deploy-irsa-roles: render-irsa-roles
 deploy-irsa-roles: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
 
 PRIVATE_SUBNET_01 = $(eval PRIVATE_SUBNET_01 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet01`].OutputValue' --output text))$(PRIVATE_SUBNET_01)
