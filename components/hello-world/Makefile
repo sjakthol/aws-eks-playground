@@ -10,7 +10,7 @@ NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/eksplayground/$(NAME)
 
 login:
-	$(AWS_CMD) ecr get-login --no-include-email | bash
+	$(AWS_CMD) ecr get-login-password | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGIONma).amazonaws.com
 
 build:
 	docker build -t $(NAME) .

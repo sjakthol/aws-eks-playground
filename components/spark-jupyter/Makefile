@@ -5,9 +5,6 @@ ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/spark/spa
 
 SPARK_VERSION ?= 2.4.4
 
-login:
-	$(AWS_CMD) ecr get-login --no-include-email | bash
-
 build:
 	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) --build-arg SPARK_VERSION=$(SPARK_VERSION) -t $(NAME) .
 

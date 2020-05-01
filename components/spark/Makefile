@@ -10,9 +10,6 @@ endif
 
 include ../../utils/common.mk
 
-login:
-	$(AWS_CMD) ecr get-login --no-include-email | bash
-
 spark-2.4.4:
 	curl -sSfL http://www.nic.funet.fi/pub/mirrors/apache.org/spark/spark-2.4.4/spark-2.4.4-bin-hadoop2.7.tgz | tar xzv
 
