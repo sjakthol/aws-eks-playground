@@ -45,13 +45,13 @@ Deploy Kubernetes dashboard as follows:
 ```bash
 # Deploy
 kubectl apply -f config/kubernetes-dashboard.yaml
-kubectl --namespace kube-system get deployments --watch -o wide
+kubectl --namespace kubernetes-dashboard get deployments --watch -o wide
 
-# Proxy the UI to localhost
-kubectl proxy >/dev/null 2>&1 &
+# Proxy the dashboard service to localhost
+kubectl -n kubernetes-dashboard port-forward service/kubernetes-dashboard 8443:443 > /dev/null 2>&1 &
 ```
 
-Dashboard accessible at http://localhost:8001/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+Dashboard accessible at https://localhost:8443/
 
 Use token authentication with a token from
 ```bash
