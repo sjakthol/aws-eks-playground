@@ -1,7 +1,7 @@
 NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
 
-SPARK_VERSION ?= 2.4.4
+SPARK_VERSION ?= 3.0.0-preview
 ifeq ($(SPARK_VERSION), 3.0.0-preview)
 	SCALA_VERSION = 2.12
 else
