@@ -21,7 +21,6 @@ Resources:
           Action:
           - sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
         - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
 
   ControlPlaneSecurityGroup:
@@ -48,7 +47,7 @@ Resources:
           - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet01
           - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet02
       RoleArn: !GetAtt EKSServiceRole.Arn
-      Version: '1.15'
+      Version: '1.16'
 
   FargatePodExecutionRole:
     Type: AWS::IAM::Role
