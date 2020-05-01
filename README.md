@@ -72,14 +72,14 @@ Then, let's deploy container as a Pod and see if we can connect to it from withi
 kubectl apply -f components/hello-world/deployment/pod.yaml
 kubectl get pods -o wide --watch
 
-# Check if it works <ip> from output of get pods above
-kubectl run -i --tty shell --image=amazonlinux:2 -- bash
-curl -v <ip>:8080
+# Check if it works
+kubectl run --generator=run-pod/v1 -i --tty shell --image=amazonlinux:2 -- bash
+curl -v hello-world:8080
 ```
 
 Remove the resources
 ```
-kubectl delete -l run=shell deployments
+kubectl delete -l run=shell pods
 kubectl delete -f components/hello-world/deployment/pod.yaml
 ```
 
@@ -100,7 +100,7 @@ curl elb:8080/
 
 # Put some load on the system
 parallel --jobs 16 --progress -n0 time curl -sS <elb>:8080/hash?value=test ::: {0..10000}
-node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 4 -d 60
+node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 8 -d 60 -c 4
 ```
 
 ## Enable Horizontal Pod Autoscaler (HPA) for the hello-world Deployment
@@ -305,8 +305,8 @@ make delete-ecr | cfn-monitor
 The contents of this repository have been scraped together from the following sources:
 * AWS Auth Configmap: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html (Modified MIT license)
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
-* Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-one-asg.yaml (Apache 2.0)
-* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v1.10.0/src/deploy/recommended/kubernetes-dashboard.yaml (Apache 2.0)
+* Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml (Apache 2.0)
+* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.0.0/aio/deploy/recommended.yaml (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-incubator/metrics-server/tree/master/deploy/1.8%2B (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * VPC template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
