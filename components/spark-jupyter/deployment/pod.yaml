@@ -10,7 +10,7 @@ spec:
   serviceAccountName: spark
   containers:
   - name: jupyter
-    image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:jupyter-3.0.0-preview
+    image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:jupyter-3.0.0-preview2
     imagePullPolicy: Always
     command: ['/bin/sh']
     args:
@@ -18,11 +18,15 @@ spec:
         - >
           /opt/spark/bin/pyspark
           --master k8s://https://$KUBERNETES_PORT_443_TCP_ADDR/
-          --conf spark.kubernetes.container.image=000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:3.0.0-preview
+          --conf spark.kubernetes.container.image=000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:3.0.0-preview2
           --conf spark.kubernetes.container.image.pullPolicy=Always
           --conf spark.kubernetes.driver.pod.name=jupyter
           --conf spark.driver.host=$(hostname -i)
-          --conf spark.executor.instances=3
+          --conf spark.dynamicAllocation.enabled=true
+          --conf spark.dynamicAllocation.shuffleTracking.enabled=true
+          --conf spark.dynamicAllocation.initialExecutors=2
+          --conf spark.dynamicAllocation.minExecutors=0
+          --conf spark.dynamicAllocation.maxExecutors=10
           --conf spark.kubernetes.executor.request.cores=0.85
           --conf spark.executor.memory=1200M
 

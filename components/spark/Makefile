@@ -1,8 +1,8 @@
 NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
 
-SPARK_VERSION ?= 3.0.0-preview
-ifeq ($(SPARK_VERSION), 3.0.0-preview)
+SPARK_VERSION ?= 3.0.0-preview2
+ifeq ($(SPARK_VERSION), 3.0.0-preview2)
 	SCALA_VERSION = 2.12
 else
 	SCALA_VERSION = 2.11
@@ -25,11 +25,11 @@ spark-2.4.4:
 
 	mv spark-2.4.4-bin-hadoop2.7 spark-2.4.4
 
-spark-3.0.0-preview:
-	curl -sSfL https://archive.apache.org/dist/spark/spark-3.0.0-preview/spark-3.0.0-preview-bin-hadoop3.2.tgz | tar xzv
-	mv spark-3.0.0-preview-bin-hadoop3.2 spark-3.0.0-preview
+spark-3.0.0-preview2:
+	curl -sSfL https://archive.apache.org/dist/spark/spark-3.0.0-preview2/spark-3.0.0-preview2-bin-hadoop3.2.tgz | tar xzv
+	mv spark-3.0.0-preview2-bin-hadoop3.2 spark-3.0.0-preview2
 
-	cd spark-3.0.0-preview/ && patch -p1 < ../patches/02-install-hadoop-aws-3.2.patch
+	cd spark-3.0.0-preview2/ && patch -p1 < ../patches/02-install-hadoop-aws-3.2.patch
 
 build: login spark-$(SPARK_VERSION)
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
