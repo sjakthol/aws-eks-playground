@@ -3,7 +3,7 @@ include ../../utils/common.mk
 NAME := pyspark-script
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/spark/spark-py
 
-SPARK_VERSION ?= 3.0.0-preview2
+SPARK_VERSION ?= 3.0.0
 
 build:
 	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) --build-arg SPARK_VERSION=$(SPARK_VERSION) -t $(NAME) .

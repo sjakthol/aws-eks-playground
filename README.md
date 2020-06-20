@@ -192,7 +192,7 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
-The Makefiles use Spark 3.0.0-preview by default. Pass `SPARK_VERSION=<version>` to use a custom version of Spark instead.
+The Makefiles use Spark 3.0.0 by default. Pass `SPARK_VERSION=<version>` to use a custom version of Spark instead.
 
 ### PySpark on EKS
 The `components/spark-pyspark/` folder has an example for how a PySpark

@@ -5,7 +5,7 @@ FROM ${AWS_ACCOUNT_ID}.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:${SPARK_V
 
 USER 0
 
-# Spark v2.4.4 image is based on Alphine which does not have build tools required to
+# Spark v2.4.6 image is based on Alphine which does not have build tools required to
 # install zeromq. Hence, install it through apk.
 #
 # Spark v3.0.0 image is based on Debian which has build tools available. Hence, install
