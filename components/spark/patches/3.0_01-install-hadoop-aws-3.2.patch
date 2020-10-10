@@ -1,0 +1,19 @@
+--- a/kubernetes/dockerfiles/spark/Dockerfile
++++ b/kubernetes/dockerfiles/spark/Dockerfile
+@@ -50,6 +50,16 @@
+ COPY kubernetes/tests /opt/spark/tests
+ COPY data /opt/spark/data
+
++# Install hadoop-aws to the image & update AWS SDK
++RUN java -jar /opt/spark/jars/ivy-2.4.0.jar \
++         -dependency org.apache.hadoop hadoop-aws 3.2.0 \
++         -retrieve '/opt/spark/jars/[organization]_[artifact]-[revision](-[classifier]).[ext]' && \
++    rm -f /opt/spark/jars/com.amazonaws_aws-java-sdk-bundle-*.jar && \
++    java -jar /opt/spark/jars/ivy-2.4.0.jar \
++         -dependency com.amazonaws aws-java-sdk-bundle 1.11.880 \
++         -retrieve '/opt/spark/jars/[organization]_[artifact]-[revision](-[classifier]).[ext]' && \
++    rm -rf /root/.ivy2/
++
+ ENV SPARK_HOME /opt/spark
+
+ WORKDIR /opt/spark/work-dir

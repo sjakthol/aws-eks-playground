@@ -10,7 +10,7 @@ spec:
   serviceAccountName: spark
   containers:
   - name: jupyter
-    image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:jupyter-3.0.0
+    image: 000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:jupyter-3.0.1
     imagePullPolicy: Always
     command: ['/bin/sh']
     args:
@@ -18,7 +18,7 @@ spec:
         - >
           /opt/spark/bin/pyspark
           --master k8s://https://$KUBERNETES_PORT_443_TCP_ADDR/
-          --conf spark.kubernetes.container.image=000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:3.0.0
+          --conf spark.kubernetes.container.image=000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:3.0.1
           --conf spark.kubernetes.container.image.pullPolicy=Always
           --conf spark.kubernetes.driver.pod.name=jupyter
           --conf spark.driver.host=$(hostname -i)
