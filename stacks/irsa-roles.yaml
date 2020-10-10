@@ -21,7 +21,7 @@ Resources:
             "Action": "sts:AssumeRoleWithWebIdentity",
             "Condition": {
               "StringEquals": {
-                "oidc.eks.eu-north-1.amazonaws.com/id/FC277300AFD9CF2B8ADD849BF13E7D16:sub": "system:serviceaccount:default:irsa-test"
+                "${OIDCProviderId}:sub": "system:serviceaccount:default:irsa-test"
               }
             }
           }]
