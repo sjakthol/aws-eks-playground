@@ -74,6 +74,7 @@ deploy-simple:
 	$(AWS_CMD) eks update-kubeconfig --name $(STACK_PREFIX)-eks-cluster
 
 	# Configure Kubernetes to let worker nodes attach to the cluster
+	sed -i "s/000000000000/$(AWS_ACCOUNT_ID)/g" config/aws-auth-cm.yaml
 	kubectl apply -f config/aws-auth-cm.yaml
 
 	# Create common resources for worker nodes (IAM Roles, SGs)
