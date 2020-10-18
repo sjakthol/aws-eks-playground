@@ -73,13 +73,13 @@ kubectl apply -f components/hello-world/deployment/pod.yaml
 kubectl get pods -o wide --watch
 
 # Check if it works
-kubectl run --generator=run-pod/v1 -i --tty shell --image=amazonlinux:2 -- bash
+kubectl run -i --tty shell --image=amazonlinux:2 -- bash
 curl -v hello-world:8080
 ```
 
 Remove the resources
 ```
-kubectl delete -l run=shell pods
+kubectl delete pod shell
 kubectl delete -f components/hello-world/deployment/pod.yaml
 ```
 

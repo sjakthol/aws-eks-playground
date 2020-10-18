@@ -47,7 +47,7 @@ Resources:
           - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet01
           - Fn::ImportValue: !Sub ${StackNamePrefix}-vpc-PublicSubnet02
       RoleArn: !GetAtt EKSServiceRole.Arn
-      Version: '1.16'
+      Version: '1.18'
 
   FargatePodExecutionRole:
     Type: AWS::IAM::Role
