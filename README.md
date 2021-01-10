@@ -262,6 +262,16 @@ make deploy-fargate-profile-default
 Once done, Amazon EKS will schedule pods in the given namespace(s)
 to AWS Fargate instead of EC2 instances.
 
+### Logging
+
+Execute the following to enable FluentBit logging in Fargate:
+
+```bash
+kubectl apply -f components/logging-fargate/deployment/
+```
+
+Once done, logs from Fargate pods will appear to CloudWatch.
+
 ## Cleanup
 
 Delete hello-world Deployment gracefully (to ensure ELB gets terminated):
@@ -299,5 +309,6 @@ The contents of this repository have been scraped together from the following so
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)
+* Fargate Logging: https://docs.aws.amazon.com/eks/latest/userguide/fargate-logging.html (Modified MIT license)
 
 Other configs based on examples available in Kubernetes Documentation and other random sources in the internet.
