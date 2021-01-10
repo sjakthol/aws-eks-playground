@@ -5,6 +5,8 @@ ARG SPARK_VERSION
 FROM ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/spark/spark-py:${SPARK_VERSION}
 
 USER 0
+# pip 20.2.4 as later pip refuses to install packages due to dependency conflicts
+RUN python3 -m pip install -U pip==20.2.4
 RUN python3 -m pip install jupyterlab s3contents
 
 # TODO: Figure out how to drop privileges while keeping Jupyter working

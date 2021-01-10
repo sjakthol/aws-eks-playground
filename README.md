@@ -18,7 +18,8 @@ General notes:
 6. [Cluster Autoscaler (CA)](#cluster-autoscaler-ca)
 7. [IAM Roles for Service Accounts](#iam-roles-for-service-accounts)
 8. [Spark on EKS](#spark-on-eks)
-10. [Fargate](#fargate)
+9. [Fargate](#fargate)
+10. [ARM](#arm)
 11. [Cleanup](#cleanup)
 12. [Credits](#credits)
 
@@ -271,6 +272,45 @@ kubectl apply -f components/logging-fargate/deployment/
 ```
 
 Once done, logs from Fargate pods will appear to CloudWatch.
+
+## ARM
+
+**Important Notes**
+* ARM instances are not available in eu-north-1 region. Use a different region (e.g. eu-west-1).
+* You'll need Docker with buildx plugin. If your docker does not have the buildx command, install it with [these instructions](https://github.com/docker/buildx/issues/132#issuecomment-636041307) (but download [latest version](https://github.com/docker/buildx/releases) instead).
+* ARM is not supported by the following components
+  * Cluster Autoscaler (added in 1.20.0)
+* Other components included in this setup work with ARM.
+
+EKS supports Graviton2 instances as compute. Execute the following to deploy ARM64 compute to your cluster:
+
+```bash
+make deploy-nodegroup-arm
+```
+
+### Docker Images
+
+You'll need to build multi-arch Docker images to run them on ARM64 architecture. Makefiles in this project contain targets for doing that. Here are some examples:
+
+```bash
+# hello-world
+(cd components/hello-world/ && make build-arm)
+
+# spark
+(cd components/spark/ && make build-arm)
+
+# Pyspark script
+(cd components/spark-pyspark/ && make build-arm)
+
+# JupyterLab container
+(cd components/spark-jupyter/ && make build-arm)
+```
+
+These commands initialize binfmt support for ARM64 architecture, configure docker buildx with ARM support, builds the service image for both ARM64 and x86_64 architectures and pushes both images to ECR as a multi-arch image. See respective Makefiles for details on the commands we use.
+
+Note: Building ARM images is very slow on non-ARM machines. They also download / upload much more data to / from ECR. You should use AWS Cloud9 with e.g. m5.xlarge instance for builds to complete in somewhat reasonable timeframe.
+
+Once images are built as described above, they can be deployed to both x86_64 and ARM64 compute as detailed earlier in this document.
 
 ## Cleanup
 

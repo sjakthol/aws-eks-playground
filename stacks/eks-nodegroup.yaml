@@ -7,6 +7,9 @@ Parameters:
     Description: A prefix for the stacks in this setup.
     Type: String
 
+Conditions:
+  IsIreland: !Equals [!Ref AWS::Region, eu-west-1]
+
 Resources:
 
   NodeGroup:
@@ -16,11 +19,11 @@ Resources:
       CapacityType: SPOT
       ClusterName: !Sub ${StackNamePrefix}-eks-cluster
       InstanceTypes:
-        - m4.large
+        - !If [IsIreland, m4.large, !Ref AWS::NoValue]
+        - !If [IsIreland, m5a.large, !Ref AWS::NoValue]
+        - !If [IsIreland, m5ad.large, !Ref AWS::NoValue]
         - m5.large
-        - m5a.large
         - m5d.large
-        - m5ad.large
       NodeRole:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-WorkerNodeInstanceRoleArn
       ScalingConfig:

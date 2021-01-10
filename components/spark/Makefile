@@ -17,6 +17,25 @@ build: login spark-$(SPARK_VERSION)
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile push
 
+build-arm: login spark-$(SPARK_VERSION)
+	docker run --privileged linuxkit/binfmt:v0.8
+	docker buildx create --use --name eksplayground --driver docker-container || :
+	cd spark-$(SPARK_VERSION) && \
+		docker buildx build \
+			--platform linux/amd64,linux/arm64 \
+			--push \
+			--build-arg java_image_tag=11-jre-slim \
+			--tag $(ECR_REPOSITORY)/spark:$(SPARK_VERSION) \
+			--file kubernetes/dockerfiles/spark/Dockerfile .
+
+	cd spark-$(SPARK_VERSION) && \
+		docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		--build-arg base_img=$(ECR_REPOSITORY)/spark:$(SPARK_VERSION) \
+		--tag $(ECR_REPOSITORY)/spark-py:$(SPARK_VERSION) \
+		--file kubernetes/dockerfiles/spark/bindings/python/Dockerfile .
+
 ca.pem:
 	$(AWS_CMD) eks describe-cluster --name $(STACK_PREFIX)-eks-cluster --output text --query cluster.certificateAuthority.data | base64 -d > $@
 

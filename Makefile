@@ -68,13 +68,13 @@ deploy-simple:
 	$(MAKE) deploy-pod-iam | cfn-monitor
 
 	# Create Data Plane (Worker Nodes)
-	$(MAKE) deploy-nodegroup deploy-eks-fargate | cfn-monitor
+	$(MAKE) deploy-eks-nodegroup deploy-eks-fargate | cfn-monitor
 
 cleanup-simple:
 	$(MAKE) delete-oidc-provider
 	$(MAKE) delete-eks-fargate | cfn-monitor
 	$(MAKE) delete-eks-fargate-default | cfn-monitor
 	$(MAKE) delete-eks-fargate-kube-system | cfn-monitor
-	$(MAKE) -j delete-pod-iam delete-nodegroup delete-logging delete-spark | cfn-monitor
+	$(MAKE) -j delete-pod-iam delete-eks-nodegroup delete-eks-nodegroup-arm delete-logging delete-spark | cfn-monitor
 	$(MAKE) delete-eks | cfn-monitor
 	$(MAKE) -j delete-base-sg delete-base-iam delete-base-ecr delete-base-logging | cfn-monitor

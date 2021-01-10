@@ -1,0 +1,32 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Amazon EKS - Node Group with ARM nodes
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+
+  NodeGroup:
+    Type: AWS::EKS::Nodegroup
+    Properties:
+      AmiType: AL2_ARM_64
+      CapacityType: SPOT
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      InstanceTypes:
+        - a1.large
+        - c6g.large
+        - c6gd.large
+        - c6gn.large
+        - t4g.medium
+      NodeRole:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-WorkerNodeInstanceRoleArn
+      ScalingConfig:
+        DesiredSize: 1
+        MinSize: 1
+        MaxSize: 4
+      Subnets:
+        - !ImportValue infra-vpc-sn-nat-a # private
+        - !ImportValue infra-vpc-sn-nat-b # private

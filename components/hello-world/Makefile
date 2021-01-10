@@ -15,6 +15,15 @@ login:
 build:
 	docker build -t $(NAME) .
 
+build-arm: login
+	docker run --privileged linuxkit/binfmt:v0.8
+	docker buildx create --use --name eksplayground --driver docker-container || :
+	docker buildx build \
+		--platform linux/amd64,linux/arm64 \
+		--push \
+		--tag $(ECR_REPOSITORY):latest \
+		.
+
 push: build login
 	docker tag $(NAME):latest $(ECR_REPOSITORY):latest
 	docker push $(ECR_REPOSITORY):latest
