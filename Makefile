@@ -64,7 +64,7 @@ WORKER_ROLE_ARN ?= $(shell $(AWS_CMD) cloudformation list-exports --query 'Expor
 
 deploy-simple:
 	# Deploy infra resources
-	$(MAKE) -j deploy-base-ecr deploy-base-iam deploy-base-sg | cfn-monitor
+	$(MAKE) -j deploy-base-ecr deploy-base-iam deploy-base-sg deploy-base-logging | cfn-monitor
 
 	# Create the EKS control plane for the cluster
 	$(MAKE) deploy-eks | cfn-monitor
@@ -89,4 +89,4 @@ cleanup-simple:
 	$(MAKE) delete-oidc-provider
 	$(MAKE) -j delete-pod-iam delete-nodegroup delete-logging delete-spark | cfn-monitor
 	$(MAKE) delete-eks | cfn-monitor
-	$(MAKE) -j delete-base-sg delete-base-iam delete-base-ecr | cfn-monitor
+	$(MAKE) -j delete-base-sg delete-base-iam delete-base-ecr delete-base-logging | cfn-monitor

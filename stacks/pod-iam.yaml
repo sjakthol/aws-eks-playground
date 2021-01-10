@@ -125,3 +125,36 @@ Resources:
                 - 'arn:aws:s3:::amazon-reviews-pds/*'
                 - 'arn:aws:s3:::ew1-infra-trail'
                 - 'arn:aws:s3:::ew1-infra-trail/*'
+
+  FluentBitLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub |
+        {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "${OIDCProviderId}:sub": "system:serviceaccount:default:fluent-bit"
+              }
+            }
+          }]
+        }
+      RoleName: !Sub ${AWS::StackName}-logging-role
+      Path: /
+      Policies:
+      - PolicyName: FluentBitLoggingPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Sid: AllowLoggingActions
+              Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:DescribeLogStreams
+                - logs:PutLogEvents
+              Resource:
+                - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StackNamePrefix}-base-logging-container-logs:*'

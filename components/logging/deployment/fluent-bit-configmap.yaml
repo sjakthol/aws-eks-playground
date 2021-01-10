@@ -38,7 +38,7 @@ data:
         Name cloudwatch
         Match kube/*
         region eu-north-1
-        log_group_name en1-eksplayground-logging-container-logs
+        log_group_name en1-eksplayground-base-logging-container-logs
         log_stream_prefix logs/
 
   parsers.conf: |

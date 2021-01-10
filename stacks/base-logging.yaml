@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Supporting resources for Fluent Bit Logging
+Description: EKS Playground - Resources for log collection
 
 Resources:
   ContainerLogLogGroup:

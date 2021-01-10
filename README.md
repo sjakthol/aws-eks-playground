@@ -235,17 +235,12 @@ kubectl logs jupyter
 
 ## Logging with Fluent Bit
 
-Note: This does not work at the moment.
-
 The `components/logging/` contains a Fluent Bit setup for forwarding logs
 from pods to CloudWatch Logs. The included configuration enriches each log
 line with Kubernetes metadata and outputs the logs in JSON format. Use the
 following commands to setup Fluent Bit logging:
 
 ```bash
-# Deploy AWS resources
-make deploy-logging | cfn-monitor
-
 # Deploy fluent-bit as a daemonset to every node
 kubectl apply -f components/logging/deployment/
 ```
