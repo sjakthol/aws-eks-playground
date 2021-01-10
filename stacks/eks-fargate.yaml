@@ -1,0 +1,28 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: EKS Playground - EKS Cluster Control Plane Fargate Configuration
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+  Namespace:
+    Type: String
+    Default: fargate
+
+Resources:
+  FargateProfile:
+    Type: AWS::EKS::FargateProfile
+    Properties:
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      FargateProfileName: !Sub ${AWS::StackName}
+      PodExecutionRoleArn:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-FargatePodExecutionRoleArn
+      Selectors:
+        - Namespace: !Ref Namespace
+      Subnets:
+        - !ImportValue infra-vpc-sn-nat-a # private
+        - !ImportValue infra-vpc-sn-nat-b # private
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-fargate-profile-ns-fargate' }

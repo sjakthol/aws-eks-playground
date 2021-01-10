@@ -249,10 +249,7 @@ You can find pod container logs from CloudWatch Logs.
 
 ## Fargate
 
-Note: This does not work at the moment.
-
-Amazon EKS can execute pods in AWS Fargate. Use the following commands to setup Fargate
-profile(s) for the EKS cluster:
+Amazon EKS can execute pods in AWS Fargate. `make deploy-simple` creates a Fargate profile for namespace `fargate` by default. Use the following commands to setup Fargate profile(s) for other namespaces:
 
 ```bash
 # Execute kube-system pods in Fargate & move coredns there
