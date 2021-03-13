@@ -22,5 +22,5 @@ Resources:
           - !ImportValue infra-vpc-sn-public-b # public
       RoleArn:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-EKSServiceRoleArn
-      Version: '1.18'
+      Version: '1.19'
 
