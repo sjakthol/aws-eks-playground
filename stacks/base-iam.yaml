@@ -78,37 +78,6 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       RoleName: !Sub ${AWS::StackName}-worker-role
 
-  ## TODO: Figure out how to get Spark work with IAM Roles for Service Accounts
-  SparkDataAccessPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: SparkDataAccessPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: AccessToNotebookBucket
-            Effect: Allow
-            Action:
-              - s3:ListBucket
-              - s3:DeleteObject
-              - s3:GetObject
-              - s3:PutObject
-            Resource:
-              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks'
-              - !Sub 'arn:aws:s3:::${StackNamePrefix}-spark-jupyter-notebooks/*'
-          - Sid: AccessToSampleDataBuckets
-            Effect: Allow
-            Action:
-              - s3:ListBucket
-              - s3:GetObject
-            Resource:
-              - 'arn:aws:s3:::amazon-reviews-pds'
-              - 'arn:aws:s3:::amazon-reviews-pds/*'
-              - 'arn:aws:s3:::ew1-infra-trail'
-              - 'arn:aws:s3:::ew1-infra-trail/*'
-      Roles:
-        - !Ref WorkerNodeInstanceRole
-
 Outputs:
   EKSServiceRoleArn:
     Value: !GetAtt EKSServiceRole.Arn

@@ -54,4 +54,5 @@ submit: spark-$(SPARK_VERSION) ca.pem
 		--conf spark.executor.instances=3 \
 		--conf spark.kubernetes.executor.request.cores=0.85 \
 		--conf spark.executor.memory=1416M \
+		--conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
 		local:///opt/spark/examples/jars/spark-examples_$(SCALA_VERSION)-$(SPARK_VERSION).jar

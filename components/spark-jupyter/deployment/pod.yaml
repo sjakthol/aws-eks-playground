@@ -21,6 +21,7 @@ spec:
           --conf spark.kubernetes.container.image=000000000000.dkr.ecr.eu-north-1.amazonaws.com/spark/spark-py:3.0.1
           --conf spark.kubernetes.container.image.pullPolicy=Always
           --conf spark.kubernetes.driver.pod.name=jupyter
+          --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark
           --conf spark.driver.host=$(hostname -i)
           --conf spark.dynamicAllocation.enabled=true
           --conf spark.dynamicAllocation.shuffleTracking.enabled=true
@@ -29,6 +30,7 @@ spec:
           --conf spark.dynamicAllocation.maxExecutors=10
           --conf spark.kubernetes.executor.request.cores=0.85
           --conf spark.executor.memory=1200M
+          --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider
 
     resources:
       requests:

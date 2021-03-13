@@ -42,4 +42,5 @@ submit:
 		--conf spark.executor.instances=3 \
 		--conf spark.kubernetes.executor.request.cores=0.85 \
 		--conf spark.executor.memory=1280M \
+		--conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
 		local:///opt/spark/work-dir/main.py
