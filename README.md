@@ -319,15 +319,11 @@ Delete hello-world Deployment gracefully (to ensure ELB gets terminated):
 kubectl delete -f components/hello-world/deployment/
 ```
 
-Delete irsa-test resources & OIDC provider for IRSA (if deployed)
-```
-kubectl delete -f components/irsa-test/deployment/
-make delete-oidc-provider
-```
+You'll need to empty all S3 buckets and ECR Repositories before they can be deleted. You might also want to check that no ELBs were left running.
 
 Delete stacks:
 ```bash
-# Delete stacks that do not hold any state / data
+# Delete everything
 make cleanup-simple
 
 # If deployed (empty out the bucket first)
@@ -336,8 +332,6 @@ make delete-spark | cfn-monitor
 # Delete ECR repositories (clean the repositories manually first)
 make delete-ecr | cfn-monitor
 ```
-
-You'll need to empty all S3 buckets and ECR Repositories before they can be deleted. You might also want to check that no ELBs were left running.
 
 ## Credits
 

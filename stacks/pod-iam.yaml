@@ -4,28 +4,46 @@ Parameters:
   StackNamePrefix:
     Description: A prefix for the stacks in this setup.
     Type: String
-  OIDCProviderId:
-    Description: ID of the OIDC provider created for IRSA.
+
+  OIDCIssuerUrl:
+    Description: URL for OIDC Provider
+    Type: String
+
+  OIDCIssuerThumbprint:
+    Description: Thumbprint for OIDC provider
     Type: String
 
 Resources:
+  OIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-OIDCProvider' }
+      ThumbprintList:
+        - !Ref OIDCIssuerThumbprint
+      Url: !Ref OIDCIssuerUrl
+
   ClusterAutoscalerRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub |
-        {
-          "Version": "2012-10-17",
-          "Statement": [{
-            "Effect": "Allow",
-            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-            "Action": "sts:AssumeRoleWithWebIdentity",
-            "Condition": {
-              "StringEquals": {
-                "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
+                }
               }
-            }
-          }]
-        }
+            }]
+          }
+        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
       RoleName: !Sub ${AWS::StackName}-cluster-autoscaler-role
       Policies:
       - PolicyName: K8SClusterAutoscalerPolicy
@@ -54,20 +72,22 @@ Resources:
   IrsaTestRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub |
-        {
-          "Version": "2012-10-17",
-          "Statement": [{
-            "Effect": "Allow",
-            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-            "Action": "sts:AssumeRoleWithWebIdentity",
-            "Condition": {
-              "StringEquals": {
-                "${OIDCProviderId}:sub": "system:serviceaccount:default:irsa-test"
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProviderId}:sub": "system:serviceaccount:default:irsa-test"
+                }
               }
-            }
-          }]
-        }
+            }]
+          }
+        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
 
       RoleName: !Sub ${AWS::StackName}-irsa-test
       Path: /
@@ -85,20 +105,22 @@ Resources:
   SparkRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub |
-        {
-          "Version": "2012-10-17",
-          "Statement": [{
-            "Effect": "Allow",
-            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-            "Action": "sts:AssumeRoleWithWebIdentity",
-            "Condition": {
-              "StringEquals": {
-                "${OIDCProviderId}:sub": "system:serviceaccount:default:spark"
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProviderId}:sub": "system:serviceaccount:default:spark"
+                }
               }
-            }
-          }]
-        }
+            }]
+          }
+        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
       RoleName: !Sub ${AWS::StackName}-spark-role
       Policies:
       - PolicyName: SparkDataAccessPolicy
@@ -129,20 +151,22 @@ Resources:
   FluentBitLoggingRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub |
-        {
-          "Version": "2012-10-17",
-          "Statement": [{
-            "Effect": "Allow",
-            "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-            "Action": "sts:AssumeRoleWithWebIdentity",
-            "Condition": {
-              "StringEquals": {
-                "${OIDCProviderId}:sub": "system:serviceaccount:default:fluent-bit"
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProviderId}:sub": "system:serviceaccount:default:fluent-bit"
+                }
               }
-            }
-          }]
-        }
+            }]
+          }
+        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
       RoleName: !Sub ${AWS::StackName}-logging-role
       Path: /
       Policies:
@@ -158,3 +182,9 @@ Resources:
                 - logs:PutLogEvents
               Resource:
                 - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StackNamePrefix}-base-logging-container-logs:*'
+
+Outputs:
+  OIDCProviderArn:
+    Value: !Ref OIDCProvider
+  OIDCProviderId:
+    Value: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]

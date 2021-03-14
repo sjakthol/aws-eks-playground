@@ -23,19 +23,7 @@ $(addprefix delete-,$(basename $(notdir $(wildcard stacks/*.yaml)))):
 # Target for creating OIDC provider for IAM Roles for Service Accounts (IRSA) setup
 OIDC_ISSUER_URL=$(shell $(AWS_CMD) eks describe-cluster --name $(STACK_PREFIX)-eks-cluster --query cluster.identity.oidc.issuer --output text)
 OIDC_ISSUER_THUMBPRINT=$(shell ./scripts/root_ca_thumbprint.sh $(OIDC_ISSUER_URL))
-OIDC_PROVIDER_ID=$(shell echo $(OIDC_ISSUER_URL) | sed "s|https://||")
-create-oidc-provider:
-	$(AWS_CMD) iam create-open-id-connect-provider --url $(OIDC_ISSUER_URL) --thumbprint-list $(OIDC_ISSUER_THUMBPRINT) --client-id-list sts.amazonaws.com
-
-delete-oidc-provider:
-	for arn in $(shell $(AWS_CMD) iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[*].Arn' --output text | grep $(OIDC_PROVIDER_ID)); do \
-		$(AWS_CMD) iam delete-open-id-connect-provider --open-id-connect-provider-arn $$arn; \
-	done
-
-deploy-pod-iam: EXTRA_PARAMETERS="OIDCProviderId=$(OIDC_PROVIDER_ID)"
-
-PRIVATE_SUBNET_01 = $(eval PRIVATE_SUBNET_01 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet01`].OutputValue' --output text))$(PRIVATE_SUBNET_01)
-PRIVATE_SUBNET_02 = $(eval PRIVATE_SUBNET_02 := $(shell $(AWS_CMD) cloudformation describe-stacks --stack-name $(STACK_PREFIX)-vpc --query 'Stacks[0].Outputs[?OutputKey==`PrivateSubnet02`].OutputValue' --output text))$(PRIVATE_SUBNET_02)
+deploy-pod-iam: EXTRA_PARAMETERS=OIDCIssuerUrl=$(OIDC_ISSUER_URL) OIDCIssuerThumbprint=$(OIDC_ISSUER_THUMBPRINT)
 
 deploy-eks-fargate-default deploy-eks-fargate-kube-system:
 deploy-eks-fargate-%:
@@ -61,9 +49,6 @@ deploy-simple:
 	sed -i "s|WORKER_ROLE_ARN|$(WORKER_ROLE_ARN)|g" config/aws-auth-cm.yaml
 	kubectl apply -f config/aws-auth-cm.yaml
 
-	# Create OIDC Profiler for IAM Roles for Service Accounts
-	$(MAKE) create-oidc-provider
-
 	# Create roles for IAM Roles for Service Accounts (Pods)
 	$(MAKE) deploy-pod-iam | cfn-monitor
 
@@ -71,7 +56,6 @@ deploy-simple:
 	$(MAKE) deploy-eks-nodegroup deploy-eks-fargate | cfn-monitor
 
 cleanup-simple:
-	$(MAKE) delete-oidc-provider
 	$(MAKE) delete-eks-fargate | cfn-monitor
 	$(MAKE) delete-eks-fargate-default | cfn-monitor
 	$(MAKE) delete-eks-fargate-kube-system | cfn-monitor

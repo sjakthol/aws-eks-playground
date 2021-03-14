@@ -24,3 +24,8 @@ Resources:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-EKSServiceRoleArn
       Version: '1.19'
 
+Outputs:
+  EKSClusterEndpoint:
+    Value: !GetAtt EKSControlPlane.Endpoint
+    Export:
+      Name: !Sub ${AWS::StackName}-EKSClusterEndpoint
