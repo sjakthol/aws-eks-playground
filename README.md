@@ -276,16 +276,12 @@ Once done, logs from Fargate pods will appear to CloudWatch.
 ## ARM
 
 **Important Notes**
-* ARM instances are not available in eu-north-1 region. Use a different region (e.g. eu-west-1).
 * You'll need Docker with buildx plugin. If your docker does not have the buildx command, install it with [these instructions](https://github.com/docker/buildx/issues/132#issuecomment-636041307) (but download [latest version](https://github.com/docker/buildx/releases) instead).
-* ARM is not supported by the following components
-  * Cluster Autoscaler (added in 1.20.0)
-* Other components included in this setup work with ARM.
 
 EKS supports Graviton2 instances as compute. Execute the following to deploy ARM64 compute to your cluster:
 
 ```bash
-make deploy-nodegroup-arm
+make deploy-eks-nodegroup-arm
 ```
 
 ### Docker Images

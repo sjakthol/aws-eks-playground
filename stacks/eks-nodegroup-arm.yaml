@@ -16,11 +16,9 @@ Resources:
       CapacityType: SPOT
       ClusterName: !Sub ${StackNamePrefix}-eks-cluster
       InstanceTypes:
-        - a1.large
         - c6g.large
-        - c6gd.large
-        - c6gn.large
-        - t4g.medium
+        - m6g.large
+        - r6g.large
       NodeRole:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-WorkerNodeInstanceRoleArn
       ScalingConfig:
