@@ -254,10 +254,10 @@ Amazon EKS can execute pods in AWS Fargate. `make deploy-simple` creates a Farga
 
 ```bash
 # Execute kube-system pods in Fargate & move coredns there
-make deploy-fargate-profile-kube-system
+make deploy-eks-fargate-kube-system
 
 # Execute all pods from the 'default' namespace in Fargate
-make deploy-fargate-profile-default
+make deploy-eks-fargate-default
 ```
 
 Once done, Amazon EKS will schedule pods in the given namespace(s)
