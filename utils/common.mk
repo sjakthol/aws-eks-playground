@@ -20,9 +20,8 @@ AWS_eu-north-1_PREFIX = en1
 # Some defaults
 AWS ?= aws
 AWS_REGION ?= eu-north-1
-AWS_PROFILE ?= default
 
-AWS_CMD := $(AWS) --profile $(AWS_PROFILE) --region $(AWS_REGION)
+AWS_CMD := $(AWS) --region $(AWS_REGION)
 AWS_ACCOUNT_ID = $(eval AWS_ACCOUNT_ID := $(shell $(AWS_CMD) sts get-caller-identity --query Account --output text))$(AWS_ACCOUNT_ID)
 
 STACK_REGION_PREFIX := $(AWS_$(AWS_REGION)_PREFIX)

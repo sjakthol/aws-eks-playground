@@ -102,7 +102,7 @@ curl elb:8080/
 
 # Put some load on the system
 parallel --jobs 16 --progress -n0 time curl -sS <elb>:8080/hash?value=test ::: {0..10000}
-node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 8 -d 60 -c 4
+node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 8 -d 600 -c 4
 ```
 
 ## Enable Horizontal Pod Autoscaler (HPA) for the hello-world Deployment
@@ -335,7 +335,7 @@ The contents of this repository have been scraped together from the following so
 * AWS Auth Configmap: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html (Modified MIT license)
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
 * Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml (Apache 2.0)
-* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.0.0/aio/deploy/recommended.yaml (Apache 2.0)
+* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.3.1/aio/deploy/recommended.yaml (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)
