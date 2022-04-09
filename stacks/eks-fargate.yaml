@@ -25,4 +25,4 @@ Resources:
         - !ImportValue infra-vpc-sn-nat-a # private
         - !ImportValue infra-vpc-sn-nat-b # private
       Tags:
-        - { Key: Name, Value: !Sub '${AWS::StackName}-fargate-profile-ns-fargate' }
+        - { Key: Name, Value: !Sub '${AWS::StackName}-ns-${Namespace}' }

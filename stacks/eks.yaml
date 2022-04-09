@@ -8,9 +8,22 @@ Parameters:
     Type: String
 
 Resources:
+  EKSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/eks/${AWS::StackName}-cluster/cluster
+      RetentionInDays: 30
+      Tags:
+        - { Key: Name, Value: !Sub '/aws/eks/${AWS::StackName}-cluster/cluster' }
+
   EKSControlPlane:
     Type: AWS::EKS::Cluster
+    DependsOn: EKSLogGroup
     Properties:
+      Logging:
+        ClusterLogging:
+          EnabledTypes:
+            - Type: audit
       Name: !Sub ${AWS::StackName}-cluster
       ResourcesVpcConfig:
         SecurityGroupIds:
@@ -22,10 +35,16 @@ Resources:
           - !ImportValue infra-vpc-sn-public-b # public
       RoleArn:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-EKSServiceRoleArn
-      Version: '1.21'
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-cluster' }
+      Version: '1.22'
 
 Outputs:
   EKSClusterEndpoint:
     Value: !GetAtt EKSControlPlane.Endpoint
     Export:
       Name: !Sub ${AWS::StackName}-EKSClusterEndpoint
+  EKSClusterOIDCIssuerUrl:
+    Value: !GetAtt EKSControlPlane.OpenIdConnectIssuerUrl
+    Export:
+      Name: !Sub ${AWS::StackName}-EKSClusterOIDCIssuerUrl
