@@ -7,7 +7,7 @@ General notes:
 * Search and replace eu-north-1 with the AWS region you want to use
 * Search and replace en1 with the prefix for AWS region you want to use
 * Makefile targets require [cfn-monitor](https://github.com/sjakthol/cfn-monitor) tool (install with `npm i -g cfn-monitor`)
-* Setup requires VPC, subnet and NAT stacks from [sjakthol/aws-account-infra](https://github.com/sjakthol/aws-account-infra).
+* Setup requires VPC and NAT stacks from [sjakthol/aws-account-infra](https://github.com/sjakthol/aws-account-infra).
 
 **Table of Contents**
 1. [Deploy and configure Kubernetes cluster](#deploy-and-configure-kubernetes-cluster)
@@ -185,7 +185,7 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
-Makefiles use Spark 3.1.1.
+Makefiles use Spark 3.2.1.
 
 ### PySpark on EKS
 The `components/spark-pyspark/` folder has an example for how a PySpark

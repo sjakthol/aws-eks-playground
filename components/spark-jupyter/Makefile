@@ -3,7 +3,7 @@ include ../../utils/common.mk
 NAME := jupyter
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/spark/spark-py
 
-SPARK_VERSION ?= 3.1.1
+SPARK_VERSION ?= 3.2.1
 
 build:
 	docker build --build-arg AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) --build-arg AWS_REGION=$(AWS_REGION) --build-arg SPARK_VERSION=$(SPARK_VERSION) -t $(NAME) .
