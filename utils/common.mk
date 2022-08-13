@@ -26,7 +26,3 @@ AWS_ACCOUNT_ID = $(eval AWS_ACCOUNT_ID := $(shell $(AWS_CMD) sts get-caller-iden
 
 STACK_REGION_PREFIX := $(AWS_$(AWS_REGION)_PREFIX)
 STACK_PREFIX := $(STACK_REGION_PREFIX)-eksplayground
-
-
-login:
-	$(AWS_CMD) ecr get-login-password | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com

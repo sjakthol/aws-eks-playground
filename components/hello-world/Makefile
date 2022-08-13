@@ -6,7 +6,7 @@ include ../../utils/common.mk
 build:
 	docker build --pull -t $(NAME) .
 
-build-arm: login
+build-arm:
 	docker run --privileged linuxkit/binfmt:v0.8
 	docker buildx create --use --name eksplayground --driver docker-container || :
 	docker buildx build \
@@ -15,6 +15,6 @@ build-arm: login
 		--tag $(ECR_REPOSITORY):latest \
 		.
 
-push: build login
+push: build
 	docker tag $(NAME):latest $(ECR_REPOSITORY):latest
 	docker push $(ECR_REPOSITORY):latest

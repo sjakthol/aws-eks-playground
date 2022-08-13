@@ -13,11 +13,11 @@ spark-3.2.1:
 
 	cd spark-3.2.1/ && patch -p1 < ../patches/3.0_01-install-hadoop-aws-3.2.patch
 
-build: login spark-$(SPARK_VERSION)
+build: spark-$(SPARK_VERSION)
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile push
 
-build-arm: login spark-$(SPARK_VERSION)
+build-arm: spark-$(SPARK_VERSION)
 	docker run --privileged linuxkit/binfmt:v0.8
 	docker buildx create --use --name eksplayground --driver docker-container || :
 	cd spark-$(SPARK_VERSION) && \
