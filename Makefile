@@ -55,6 +55,9 @@ deploy-simple:
 	# Deploy addons to the cluster
 	$(MAKE) deploy-eks-addons | cfn-monitor
 
+	# Configure VPC CNI plugin to use prefix delegation
+	kubectl set env daemonset aws-node -n kube-system ENABLE_PREFIX_DELEGATION=true
+
 	# Create Data Plane (Worker Nodes)
 	$(MAKE) -j deploy-eks-nodegroup deploy-eks-fargate | cfn-monitor
 
