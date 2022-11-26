@@ -1,0 +1,21 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: EKS Playground - Addons for EKS cluster
+
+Parameters:
+  StackNamePrefix:
+    Description: A prefix for the stacks in this setup.
+    Type: String
+
+Resources:
+  VpcCniAddon:
+    Type: AWS::EKS::Addon
+    Properties:
+      AddonName: vpc-cni
+      AddonVersion: v1.11.4-eksbuild.1
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      ResolveConflicts: OVERWRITE
+      ServiceAccountRoleArn:
+        Fn::ImportValue: !Sub ${StackNamePrefix}-pod-iam-VpcCniPluginRoleArn
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-VpcCniAddon' }

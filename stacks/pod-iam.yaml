@@ -25,6 +25,94 @@ Resources:
         - !Ref OIDCIssuerThumbprint
       Url: !Ref OIDCIssuerUrl
 
+  VpcCniPluginRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "${OIDCProviderId}:aud": "sts.amazonaws.com",
+                  "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:aws-node"
+                }
+              }
+            }]
+          }
+        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
+      RoleName: !Sub ${AWS::StackName}-VpcCniPluginRole
+      Policies:
+      # https://github.com/aws/amazon-vpc-cni-k8s/blob/master/docs/iam-policy.md
+      - PolicyName: VpcCniPluginPolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - ec2:DescribeInstances
+                - ec2:DescribeTags
+                - ec2:DescribeNetworkInterfaces
+                - ec2:DescribeInstanceTypes
+              Resource: "*"
+            - Effect: Allow
+              Action:
+                - ec2:CreateTags
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
+            - Effect: Allow
+              Action:
+                - ec2:CreateNetworkInterface
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
+              Condition:
+                StringEquals:
+                  aws:RequestTag/cluster.k8s.amazonaws.com/name: !Sub ${StackNamePrefix}-eks-cluster
+            - Effect: Allow
+              Action:
+                - ec2:CreateNetworkInterface
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/*
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/*
+              Condition:
+                StringEquals:
+                  ec2:Vpc: !Sub
+                    - arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}
+                    - VpcId: !ImportValue infra-vpc-VpcId
+
+            - Effect: Allow
+              Action:
+                - ec2:DeleteNetworkInterface
+                - ec2:UnassignPrivateIpAddresses
+                - ec2:AssignPrivateIpAddresses
+                - ec2:AttachNetworkInterface
+                - ec2:DetachNetworkInterface
+                - ec2:ModifyNetworkInterfaceAttribute
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
+              Condition:
+                StringEquals:
+                  aws:ResourceTag/cluster.k8s.amazonaws.com/name: !Sub ${StackNamePrefix}-eks-cluster
+            - Effect: Allow
+              Action:
+                - ec2:AttachNetworkInterface
+                - ec2:DetachNetworkInterface
+                - ec2:ModifyNetworkInterfaceAttribute
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+              Condition:
+                StringEquals:
+                  aws:ResourceTag/eks:cluster-name: !Sub ${StackNamePrefix}-eks-cluster
+            - Effect: Allow
+              Action:
+                - ec2:ModifyNetworkInterfaceAttribute
+              Resource:
+                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/*
+
   ClusterAutoscalerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -190,3 +278,8 @@ Outputs:
     Value: !Ref OIDCProvider
   OIDCProviderId:
     Value: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
+
+  VpcCniPluginRoleArn:
+    Value: !GetAtt VpcCniPluginRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-VpcCniPluginRoleArn
