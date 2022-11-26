@@ -5,5 +5,15 @@ Resources:
   ContainerLogLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 30
       LogGroupName: !Sub ${AWS::StackName}-container-logs
+      RetentionInDays: 30
+      Tags:
+        - { Key: Name, Value: !Sub '${AWS::StackName}-container-logs' }
+
+  EKSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/eks/${AWS::StackName}-cluster/cluster
+      RetentionInDays: 30
+      Tags:
+        - { Key: Name, Value: !Sub '/aws/eks/${AWS::StackName}-cluster/cluster' }
