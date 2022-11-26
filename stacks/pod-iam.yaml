@@ -57,6 +57,8 @@ Resources:
                 - autoscaling:DescribeAutoScalingInstances
                 - autoscaling:DescribeLaunchConfigurations
                 - autoscaling:DescribeTags
+                - ec2:DescribeInstanceTypes
+                - ec2:DescribeLaunchTemplateVersions
               Resource: "*"
             - Sid: AllowASGManagement
               Effect: Allow

@@ -1,24 +1,23 @@
 NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
 
-SPARK_VERSION ?= 3.2.1
+SPARK_VERSION ?= 3.3.1
 SCALA_VERSION = 2.12
 
 include ../../utils/common.mk
 
+spark-3.3.1:
+	curl -sSfL https://archive.apache.org/dist/spark/spark-3.3.1/spark-3.3.1-bin-hadoop3.tgz | tar xzv
+	mv spark-3.3.1-bin-hadoop3 spark-3.3.1
 
-spark-3.2.1:
-	curl -sSfL https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz | tar xzv
-	mv spark-3.2.1-bin-hadoop3.2 spark-3.2.1
-
-	cd spark-3.2.1/ && patch -p1 < ../patches/3.0_01-install-hadoop-aws-3.2.patch
+	cd spark-3.3.1/ && patch -p1 < ../patches/3.0_01-install-hadoop-aws-3.2.patch
 
 build: spark-$(SPARK_VERSION)
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile push
 
 build-arm: spark-$(SPARK_VERSION)
-	docker run --privileged linuxkit/binfmt:v0.8
+	docker run --privileged tonistiigi/binfmt --install all
 	docker buildx create --use --name eksplayground --driver docker-container || :
 	cd spark-$(SPARK_VERSION) && \
 		docker buildx build \

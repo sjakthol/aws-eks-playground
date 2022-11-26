@@ -32,7 +32,7 @@ Resources:
   NodeSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
-      Description: Allow node to communicate with each other
+      Description: Allow worker nodes to communicate with each other
       GroupId: !Ref WorkerNodeSecurityGroup
       SourceSecurityGroupId: !Ref WorkerNodeSecurityGroup
       IpProtocol: '-1'

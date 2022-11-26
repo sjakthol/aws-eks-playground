@@ -185,7 +185,7 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
-Makefiles use Spark 3.2.1.
+Makefiles use Spark 3.3.1.
 
 ### PySpark on EKS
 The `components/spark-pyspark/` folder has an example for how a PySpark

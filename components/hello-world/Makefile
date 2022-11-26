@@ -7,7 +7,7 @@ build:
 	docker build --pull -t $(NAME) .
 
 build-arm:
-	docker run --privileged linuxkit/binfmt:v0.8
+	docker run --privileged tonistiigi/binfmt --install all
 	docker buildx create --use --name eksplayground --driver docker-container || :
 	docker buildx build \
 		--platform linux/amd64,linux/arm64 \
