@@ -98,10 +98,10 @@ kubectl get deployments --watch -o wide
 kubectl get svc # to find ELB address
 
 # Test the ELB (takes a few minutes to be available)
-curl elb:8080/
+curl http://<elb>:8080/
 
 # Put some load on the system
-parallel --jobs 16 --progress -n0 time curl -sS <elb>:8080/hash?value=test ::: {0..10000}
+parallel --jobs 16 --progress -n0 time curl -sS http://<elb>:8080/hash?value=test ::: {0..10000}
 node components/hello-world/scripts/generate-load.js -u http://<elb>:8080/hash?value=test -p 8 -d 600 -c 4
 ```
 
@@ -123,8 +123,8 @@ kubectl get hpa --watch -o wide
 kubectl get deployments --watch -o wide
 
 # Put some load on the service
-parallel --jobs 16 --progress -n0 time curl -sS elb:8080/hash?value=test ::: {0..10000}
-node components/hello-world/scripts/generate-load.js --url elb:8080/hash?value=test --duration 900 --connections 16
+parallel --jobs 16 --progress -n0 time curl -sS http://<elb>:8080/hash?value=test ::: {0..10000}
+node components/hello-world/scripts/generate-load.js --url http://<elb>:8080/hash?value=test --duration 900 --connections 16
 ```
 
 ## Cluster Autoscaler (CA)
@@ -185,7 +185,7 @@ kubectl apply -f components/spark/deployment/serviceaccount.yaml
 (cd components/spark && make submit)
 ```
 
-Makefiles use Spark 3.3.1.
+Makefiles use Spark 3.3.2.
 
 ### PySpark on EKS
 The `components/spark-pyspark/` folder has an example for how a PySpark
@@ -335,7 +335,7 @@ The contents of this repository have been scraped together from the following so
 * AWS Auth Configmap: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html (Modified MIT license)
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
 * Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml (Apache 2.0)
-* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.3.1/aio/deploy/recommended.yaml (Apache 2.0)
+* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.7.0/aio/deploy/recommended.yaml (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 * Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)

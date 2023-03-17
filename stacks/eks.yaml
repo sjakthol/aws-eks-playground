@@ -28,7 +28,7 @@ Resources:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-EKSServiceRoleArn
       Tags:
         - { Key: Name, Value: !Sub '${AWS::StackName}-cluster' }
-      Version: '1.24'
+      Version: '1.25'
 
 Outputs:
   EKSClusterEndpoint:

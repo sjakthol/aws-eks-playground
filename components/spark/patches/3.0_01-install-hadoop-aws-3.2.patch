@@ -5,11 +5,11 @@
  COPY data /opt/spark/data
 
 +# Install hadoop-aws to the image & update AWS SDK
-+RUN java -jar /opt/spark/jars/ivy-2.5.0.jar \
++RUN java -jar /opt/spark/jars/ivy-2.5.1.jar \
 +         -dependency org.apache.hadoop hadoop-aws 3.2.0 \
 +         -retrieve '/opt/spark/jars/[organization]_[artifact]-[revision](-[classifier]).[ext]' && \
 +    rm -f /opt/spark/jars/com.amazonaws_aws-java-sdk-bundle-*.jar && \
-+    java -jar /opt/spark/jars/ivy-2.5.0.jar \
++    java -jar /opt/spark/jars/ivy-2.5.1.jar \
 +         -dependency com.amazonaws aws-java-sdk-bundle 1.11.880 \
 +         -retrieve '/opt/spark/jars/[organization]_[artifact]-[revision](-[classifier]).[ext]' && \
 +    rm -rf /root/.ivy2/

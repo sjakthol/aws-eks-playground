@@ -12,7 +12,7 @@ Resources:
     Type: AWS::EKS::Addon
     Properties:
       AddonName: vpc-cni
-      AddonVersion: v1.11.4-eksbuild.1
+      AddonVersion: v1.12.2-eksbuild.1
       ClusterName: !Sub ${StackNamePrefix}-eks-cluster
       ResolveConflicts: OVERWRITE
       ServiceAccountRoleArn:
