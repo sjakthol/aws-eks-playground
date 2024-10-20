@@ -39,19 +39,6 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
       RoleName: !Sub ${AWS::StackName}-fargate-pod-execution-role
-      Policies:
-      - PolicyName: FluentBitLoggingPolicy
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: AllowLoggingActions
-              Effect: Allow
-              Action:
-                - logs:CreateLogStream
-                - logs:DescribeLogStreams
-                - logs:PutLogEvents
-              Resource:
-                - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StackNamePrefix}-base-logging-container-logs:*'
 
   WorkerNodeInstanceProfile:
     Type: AWS::IAM::InstanceProfile

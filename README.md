@@ -213,20 +213,6 @@ kubectl logs jupyter
 # Open the link in your browser, start writing Spark code
 ```
 
-## Logging with Fluent Bit
-
-The `components/logging/` contains a Fluent Bit setup for forwarding logs
-from pods to CloudWatch Logs. The included configuration enriches each log
-line with Kubernetes metadata and outputs the logs in JSON format. Use the
-following commands to setup Fluent Bit logging:
-
-```bash
-# Deploy fluent-bit as a daemonset to every node
-kubectl apply -f components/logging/deployment/
-```
-
-You can find pod container logs from CloudWatch Logs.
-
 ## Fargate
 
 Amazon EKS can execute pods in AWS Fargate. `make deploy-simple` creates a Fargate profile for namespace `fargate` by default. Use the following commands to setup Fargate profile(s) for other namespaces:
@@ -242,15 +228,6 @@ make deploy-eks-fargate-default
 Once done, Amazon EKS will schedule pods in the given namespace(s)
 to AWS Fargate instead of EC2 instances.
 
-### Logging
-
-Execute the following to enable FluentBit logging in Fargate:
-
-```bash
-kubectl apply -f components/logging-fargate/deployment/
-```
-
-Once done, logs from Fargate pods will appear to CloudWatch.
 
 ## ARM
 
@@ -317,7 +294,5 @@ The contents of this repository have been scraped together from the following so
 * Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.7.0/aio/deploy/recommended.yaml (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
-* Logging: https://github.com/aws-samples/amazon-ecs-fluent-bit-daemon-service (Apache License Version 2.0)
-* Fargate Logging: https://docs.aws.amazon.com/eks/latest/userguide/fargate-logging.html (Modified MIT license)
 
 Other configs based on examples available in Kubernetes Documentation and other random sources in the internet.

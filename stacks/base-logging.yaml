@@ -2,14 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: EKS Playground - Resources for log collection
 
 Resources:
-  ContainerLogLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub ${AWS::StackName}-container-logs
-      RetentionInDays: 30
-      Tags:
-        - { Key: Name, Value: !Sub '${AWS::StackName}-container-logs' }
-
   EKSLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
