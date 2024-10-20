@@ -287,7 +287,6 @@ make delete-ecr | cfn-monitor
 ## Credits
 
 The contents of this repository have been scraped together from the following sources:
-* AWS Auth Configmap: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html (Modified MIT license)
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
 * Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml (Apache 2.0)
 * Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/ (Apache 2.0)
