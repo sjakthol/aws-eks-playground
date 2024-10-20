@@ -150,26 +150,6 @@ kubectl get deployments --watch -o wide
 kubectl get nodes --watch -o wide
 ```
 
-## IAM Roles for Service Accounts
-IAM Roles for Service Accounts (IRSA) give pods a dedicated IAM role to operate on AWS APIs. See https://aws.amazon.com/blogs/opensource/introducing-fine-grained-iam-roles-service-accounts/ for details.
-
-Makefile creates an OIDC provider and a set of IAM roles that can be assigned to Kubernetes Service Accounts. To deploy a component that uses a sample role, run the following:
-```bash
-# Create service account that is assigned with the irsa-test role from the irsa-roles stack
-kubectl apply -f components/irsa-test/deployment/serviceaccount.yaml
-
-# Create pod that uses this service account
-kubectl apply -f components/irsa-test/deployment/pod.yaml
-
-# Log into the pod to see the role in action
-kubectl exec -ti irsa-test-pod -- bash
-
-# Install AWS CLI to test the role
-pip install awscli
-aws sts get-caller-identity
-aws --region eu-north-1 eks list-clusters
-```
-
 ## Spark on EKS
 Apache Spark supports Kubernetes as scheduling backend for Spark application. Use the following commands to run Spark on EKS:
 
