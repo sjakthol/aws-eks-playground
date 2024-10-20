@@ -159,38 +159,6 @@ Resources:
                 StringEquals:
                   aws:ResourceTag/eks:cluster-name: !Sub ${StackNamePrefix}-eks-cluster
 
-  IrsaTestRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument: !Sub
-        - |
-          {
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-              "Action": "sts:AssumeRoleWithWebIdentity",
-              "Condition": {
-                "StringEquals": {
-                  "${OIDCProviderId}:sub": "system:serviceaccount:default:irsa-test"
-                }
-              }
-            }]
-          }
-        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
-
-      RoleName: !Sub ${AWS::StackName}-irsa-test
-      Path: /
-      Policies:
-      - PolicyName: TestAccess
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-          - Sid: TestAccess
-            Effect: Allow
-            Action:
-            - eks:ListClusters
-            Resource: '*'
 
   SparkRole:
     Type: AWS::IAM::Role
