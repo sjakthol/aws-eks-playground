@@ -41,15 +41,15 @@ See the Makefile for details on the steps it takes to get a working Kubernetes c
 
 ## Deploy kubernetes-dashboard
 
-Deploy Kubernetes dashboard as follows:
+Deploy Kubernetes dashboard as follows (requires helm):
 
 ```bash
 # Deploy
-kubectl apply -f config/kubernetes-dashboard.yaml
-kubectl --namespace kubernetes-dashboard get deployments --watch -o wide
+helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
 
 # Proxy the dashboard service to localhost
-kubectl -n kubernetes-dashboard port-forward service/kubernetes-dashboard 8443:443 > /dev/null 2>&1 &
+kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
 ```
 
 Dashboard accessible at https://localhost:8443/
@@ -291,7 +291,7 @@ The contents of this repository have been scraped together from the following so
 * AWS Auth Configmap: https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html (Modified MIT license)
 * EKS template: Loosely based on eksctl (https://eksctl.io/ & Apache 2.0) and EKS Quickstart (https://github.com/aws-quickstart/quickstart-amazon-eks/blob/master/templates/amazon-eks-master.template.yaml & Apache 2.0).
 * Kubernetes Cluster Autoscaler deployment: https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml (Apache 2.0)
-* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/blob/v2.7.0/aio/deploy/recommended.yaml (Apache 2.0)
+* Kubernetes Dashboard deployment: https://github.com/kubernetes/dashboard/ (Apache 2.0)
 * Kubernetes Metrics Server deployment: https://github.com/kubernetes-sigs/metrics-server/releases (Apache 2.0)
 * Nodegroup template: https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html (Modified MIT license)
 
