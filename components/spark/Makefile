@@ -1,16 +1,16 @@
 NAME := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 ECR_REPOSITORY = $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com/$(NAME)
 
-SPARK_VERSION ?= 3.3.2
+SPARK_VERSION ?= 3.5.3
 SCALA_VERSION = 2.12
 
 include ../../utils/common.mk
 
-spark-3.3.2:
-	curl -sSfL https://archive.apache.org/dist/spark/spark-3.3.2/spark-3.3.2-bin-hadoop3.tgz | tar xzv
-	mv spark-3.3.2-bin-hadoop3 spark-3.3.2
+spark-3.5.3:
+	curl -sSfL https://archive.apache.org/dist/spark/spark-3.5.3/spark-3.5.3-bin-hadoop3.tgz | tar xzv
+	mv spark-3.5.3-bin-hadoop3 spark-3.5.3
 
-	cd spark-3.3.2/ && patch -p1 < ../patches/3.0_01-install-hadoop-aws-3.2.patch
+	cd spark-3.5.3/ && patch -p1 < ../patches/3.0_01-install-hadoop-aws-3.2.patch
 
 build: spark-$(SPARK_VERSION)
 	cd spark-$(SPARK_VERSION) && ./bin/docker-image-tool.sh -r $(ECR_REPOSITORY) -t $(SPARK_VERSION) -p kubernetes/dockerfiles/spark/bindings/python/Dockerfile build
