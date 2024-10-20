@@ -36,8 +36,6 @@ delete-eks-fargate-default delete-eks-fargate-kube-system:
 delete-eks-fargate-%:
 	$(MAKE) delete-eks-fargate STACK_SUFFIX="-$*"
 
-WORKER_ROLE_ARN ?= $(shell $(AWS_CMD) cloudformation list-exports --query 'Exports[?Name==`$(STACK_PREFIX)-base-iam-WorkerNodeInstanceRoleArn`].Value' --output text)
-
 deploy-simple:
 	# Deploy infra resources
 	$(MAKE) -j deploy-base-ecr deploy-base-iam deploy-base-sg deploy-base-logging
@@ -48,11 +46,7 @@ deploy-simple:
 	# Configure kubectl with credentials needed to access the cluster
 	$(AWS_CMD) eks update-kubeconfig --name $(STACK_PREFIX)-eks-cluster
 
-	# Configure Kubernetes to let worker nodes attach to the cluster
-	sed -i "s|WORKER_ROLE_ARN|$(WORKER_ROLE_ARN)|g" config/aws-auth-cm.yaml
-	kubectl apply -f config/aws-auth-cm.yaml
-
-	# Create roles for IAM Roles for Service Accounts (Pods)
+	# Create roles for pods
 	$(MAKE) deploy-pod-iam
 
 	# Deploy addons to the cluster

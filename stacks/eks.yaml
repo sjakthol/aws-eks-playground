@@ -11,6 +11,9 @@ Resources:
   EKSControlPlane:
     Type: AWS::EKS::Cluster
     Properties:
+      AccessConfig:
+        AuthenticationMode: API
+        BootstrapClusterCreatorAdminPermissions: true
       Logging:
         ClusterLogging:
           EnabledTypes:
@@ -28,7 +31,9 @@ Resources:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-EKSServiceRoleArn
       Tags:
         - { Key: Name, Value: !Sub '${AWS::StackName}-cluster' }
-      Version: '1.25'
+      UpgradePolicy:
+        SupportType: STANDARD
+      Version: '1.31'
 
 Outputs:
   EKSClusterEndpoint:

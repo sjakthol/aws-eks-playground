@@ -12,13 +12,19 @@ Resources:
   NodeGroup:
     Type: AWS::EKS::Nodegroup
     Properties:
-      AmiType: AL2_x86_64
+      AmiType: AL2023_x86_64_STANDARD
       CapacityType: SPOT
       ClusterName: !Sub ${StackNamePrefix}-eks-cluster
       InstanceTypes:
         - c5.large
         - m5.large
         - r5.large
+        - c6i.large
+        - m6i.large
+        - r6i.large
+        - c7i.large
+        - m7i.large
+        - r7i.large
       NodeRole:
         Fn::ImportValue: !Sub ${StackNamePrefix}-base-iam-WorkerNodeInstanceRoleArn
       ScalingConfig:

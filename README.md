@@ -74,7 +74,7 @@ kubectl apply -f components/hello-world/deployment/pod.yaml
 kubectl get pods -o wide --watch
 
 # Check if it works
-kubectl run -i --tty shell --image=amazonlinux:2 -- bash
+kubectl run -i --tty shell --image=amazonlinux:2023 -- bash
 curl -v hello-world:8080
 ```
 
@@ -218,9 +218,6 @@ kubectl logs jupyter
 Amazon EKS can execute pods in AWS Fargate. `make deploy-simple` creates a Fargate profile for namespace `fargate` by default. Use the following commands to setup Fargate profile(s) for other namespaces:
 
 ```bash
-# Execute kube-system pods in Fargate & move coredns there
-make deploy-eks-fargate-kube-system
-
 # Execute all pods from the 'default' namespace in Fargate
 make deploy-eks-fargate-default
 ```
@@ -228,6 +225,8 @@ make deploy-eks-fargate-default
 Once done, Amazon EKS will schedule pods in the given namespace(s)
 to AWS Fargate instead of EC2 instances.
 
+Note: EKS Pod Identities is not supported on Fargate. Don't apply Fargate
+profile for a namespace with services that utilize EKS Pod Identities feature.
 
 ## ARM
 

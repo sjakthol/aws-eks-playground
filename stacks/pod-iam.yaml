@@ -28,111 +28,48 @@ Resources:
   VpcCniPluginRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub
-        - |
-          {
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-              "Action": "sts:AssumeRoleWithWebIdentity",
-              "Condition": {
-                "StringEquals": {
-                  "${OIDCProviderId}:aud": "sts.amazonaws.com",
-                  "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:aws-node"
-                }
-              }
-            }]
-          }
-        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
-      RoleName: !Sub ${AWS::StackName}-VpcCniPluginRole
-      Policies:
-      # https://github.com/aws/amazon-vpc-cni-k8s/blob/master/docs/iam-policy.md
-      - PolicyName: VpcCniPluginPolicy
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - ec2:DescribeInstances
-                - ec2:DescribeTags
-                - ec2:DescribeNetworkInterfaces
-                - ec2:DescribeInstanceTypes
-              Resource: "*"
-            - Effect: Allow
-              Action:
-                - ec2:CreateTags
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
-            - Effect: Allow
-              Action:
-                - ec2:CreateNetworkInterface
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
-              Condition:
-                StringEquals:
-                  aws:RequestTag/cluster.k8s.amazonaws.com/name: !Sub ${StackNamePrefix}-eks-cluster
-            - Effect: Allow
-              Action:
-                - ec2:CreateNetworkInterface
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:subnet/*
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/*
-              Condition:
-                StringEquals:
-                  ec2:Vpc: !Sub
-                    - arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VpcId}
-                    - VpcId: !ImportValue infra-vpc-VpcId
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Sid: AllowEksAuthToAssumeRoleForPodIdentity
+          Effect: Allow
+          Principal:
+            Service: pods.eks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+            - sts:TagSession
+          Condition:
+            StringEquals:
+              aws:SourceOrgId: "${aws:ResourceOrgId}"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
 
-            - Effect: Allow
-              Action:
-                - ec2:DeleteNetworkInterface
-                - ec2:UnassignPrivateIpAddresses
-                - ec2:AssignPrivateIpAddresses
-                - ec2:AttachNetworkInterface
-                - ec2:DetachNetworkInterface
-                - ec2:ModifyNetworkInterfaceAttribute
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:network-interface/*
-              Condition:
-                StringEquals:
-                  aws:ResourceTag/cluster.k8s.amazonaws.com/name: !Sub ${StackNamePrefix}-eks-cluster
-            - Effect: Allow
-              Action:
-                - ec2:AttachNetworkInterface
-                - ec2:DetachNetworkInterface
-                - ec2:ModifyNetworkInterfaceAttribute
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
-              Condition:
-                StringEquals:
-                  aws:ResourceTag/eks:cluster-name: !Sub ${StackNamePrefix}-eks-cluster
-            - Effect: Allow
-              Action:
-                - ec2:ModifyNetworkInterfaceAttribute
-              Resource:
-                - !Sub arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:security-group/*
+  VpcCniPluginRoleAssociation:
+    Type: AWS::EKS::PodIdentityAssociation
+    Properties:
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      Namespace: kube-system
+      RoleArn: !GetAtt VpcCniPluginRole.Arn
+      ServiceAccount: aws-node
+      Tags:
+      - { Key: Name, Value: !Sub "${AWS::StackName}-VpcCniPluginRoleAssociation" }
 
   ClusterAutoscalerRole:
     Type: AWS::IAM::Role
     Properties:
-      AssumeRolePolicyDocument: !Sub
-        - |
-          {
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Principal": { "Federated": "arn:aws:iam::${AWS::AccountId}:oidc-provider/${OIDCProviderId}" },
-              "Action": "sts:AssumeRoleWithWebIdentity",
-              "Condition": {
-                "StringEquals": {
-                  "${OIDCProviderId}:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
-                }
-              }
-            }]
-          }
-        - OIDCProviderId: !Select [1, !Split ['oidc-provider/', !Ref OIDCProvider]]
-      RoleName: !Sub ${AWS::StackName}-cluster-autoscaler-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Sid: AllowEksAuthToAssumeRoleForPodIdentity
+          Effect: Allow
+          Principal:
+            Service: pods.eks.amazonaws.com
+          Action:
+            - sts:AssumeRole
+            - sts:TagSession
+          Condition:
+            StringEquals:
+              aws:SourceOrgId: "${aws:ResourceOrgId}"
       Policies:
       - PolicyName: K8SClusterAutoscalerPolicy
         PolicyDocument:
@@ -144,9 +81,12 @@ Resources:
                 - autoscaling:DescribeAutoScalingGroups
                 - autoscaling:DescribeAutoScalingInstances
                 - autoscaling:DescribeLaunchConfigurations
-                - autoscaling:DescribeTags
+                - autoscaling:DescribeScalingActivities
+                - ec2:DescribeImages
                 - ec2:DescribeInstanceTypes
                 - ec2:DescribeLaunchTemplateVersions
+                - ec2:GetInstanceTypesFromInstanceRequirements
+                - eks:DescribeNodegroup
               Resource: "*"
             - Sid: AllowASGManagement
               Effect: Allow
@@ -159,6 +99,15 @@ Resources:
                 StringEquals:
                   aws:ResourceTag/eks:cluster-name: !Sub ${StackNamePrefix}-eks-cluster
 
+  ClusterAutoscalerRoleAssociation:
+    Type: AWS::EKS::PodIdentityAssociation
+    Properties:
+      ClusterName: !Sub ${StackNamePrefix}-eks-cluster
+      Namespace: kube-system
+      RoleArn: !GetAtt ClusterAutoscalerRole.Arn
+      ServiceAccount: cluster-autoscaler
+      Tags:
+      - { Key: Name, Value: !Sub "${AWS::StackName}-ClusterAutoscalerRoleAssociation" }
 
   SparkRole:
     Type: AWS::IAM::Role
